@@ -3,6 +3,7 @@ package com.paidy.server
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.server.Directives._
 import akka.pattern.ask
@@ -23,6 +24,9 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
 object FraudCheckerServer extends Directives with JsonSupport{
 
+  implicit override def sprayJsonMarshallerConverter[T](writer: RootJsonWriter[T])(
+    implicit printer: JsonPrinter = CompactPrinter): ToEntityMarshaller[T] = sprayJsonMarshaller[T](writer, printer)
+
   def main(args: Array[String]) {
 
     implicit val system = ActorSystem("my-system")
@@ -41,7 +45,15 @@ object FraudCheckerServer extends Directives with JsonSupport{
         post {
           entity(as[Address]) { address => // will unmarshal JSON to Order
             println("received: ", address) //change it to logger
-            complete(s"line1: ${address.line1}")
+            complete(address)
+//              (
+//                "line1", address.line1,
+//                "line2", address.line1,
+//                "city",  address.city,
+//                "state", address.state,
+//                "zip",   address.zip
+//              )
+//            )
           }
         }
       }
