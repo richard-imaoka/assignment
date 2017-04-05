@@ -3,9 +3,7 @@ package com.paidy.server
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Directives
-import akka.http.scaladsl.server.Directives._
 import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
@@ -14,18 +12,18 @@ import com.paidy.authorizations.actors.AddressFraudProbabilityScorer._
 import com.paidy.domain.Address
 import spray.json._
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.io.StdIn
+import scala.util.{Failure, Success}
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
-  implicit val addressFormat = jsonFormat5(Address) //to unmarshall (i.e. JSON -> Address) for 5-parameter case class
+  implicit val addressFormat = jsonFormat5(Address) //to marshall/unmarshall (i.e. JSON <-> Address) for 5-parameter case class
+  implicit val whatSoEverFormat = jsonFormat2(ReturnJSON)
 }
 
-object FraudCheckerServer extends Directives with JsonSupport{
+case class ReturnJSON(status: Boolean, address: Address)
 
-  implicit override def sprayJsonMarshallerConverter[T](writer: RootJsonWriter[T])(
-    implicit printer: JsonPrinter = CompactPrinter): ToEntityMarshaller[T] = sprayJsonMarshaller[T](writer, printer)
+object FraudCheckerServer extends Directives with JsonSupport{
 
   def main(args: Array[String]) {
 
@@ -38,22 +36,21 @@ object FraudCheckerServer extends Directives with JsonSupport{
 
     val route =
       path("check") {
-        get{
-          val fut = scorer ? ScoreAddress(Address("line1", "line2", "city", "state", "zip"))
-          complete(Await.result(fut, timeout.duration).toString)
-        } ~
         post {
           entity(as[Address]) { address => // will unmarshal JSON to Order
             println("received: ", address) //change it to logger
-            complete(address)
-//              (
-//                "line1", address.line1,
-//                "line2", address.line1,
-//                "city",  address.city,
-//                "state", address.state,
-//                "zip",   address.zip
-//              )
-//            )
+            val fut = scorer ? ScoreAddress(address)
+            onComplete(fut){
+              case Success(score) => {
+                println("score: ", score)
+                val status = score.asInstanceOf[Double] >= 0.78
+                complete(ReturnJSON(status, address))
+              }
+              case Failure(ex) => {
+                println(ex)
+                complete("error happened")
+              }
+            }
           }
         }
       }
