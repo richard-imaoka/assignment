@@ -7,13 +7,12 @@ import akka.http.scaladsl.server.Directives
 import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import com.paidy.authorizations.actors.AddressFraudProbabilityScorer
-import com.paidy.authorizations.actors.AddressFraudProbabilityScorer._
+import com.paidy.authorizations.actors.{AddressFraudProbabilityScorer, MiddleMan}
+import com.paidy.authorizations.actors.MiddleMan.ScoreRequest
 import com.paidy.domain.Address
 import com.typesafe.config.ConfigFactory
 import spray.json._
 
-import scala.collection.immutable.Queue
 import scala.concurrent.duration._
 import scala.io.StdIn
 import scala.util.{Failure, Success}
@@ -25,39 +24,12 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
 case class ReturnJSON(status: Boolean, address: Address)
 
-//backend failure -> 500
-//timeout -> 5 seconds -> test
-//timeout -> 500
 //use logger instead of println
 //read ip from config
 //read port from config
+//service failure handling
 
 object FraudCheckerServer extends Directives with JsonSupport{
-
-  var scoreHistory = Map[String, Queue[Double]]()
-
-  def getHistoricalScoresUpTp10(score: Double, address: Address, history: Map[String, Queue[Double]]): Queue[Double] = {
-    val key = address.toString
-    val historicalScores = history.getOrElse(key, Queue[Double]())
-
-    if(historicalScores.size == 10){
-      val (_, historical9) = historicalScores.dequeue
-      historical9.enqueue(score)
-    }
-    else
-      historicalScores.enqueue(score)
-  }
-
-  def judge(score: Double, address: Address, history: Map[String, Queue[Double]]): Boolean = {
-    val historicalScores: Queue[Double] = getHistoricalScoresUpTp10(score, address, history)
-    val average = historicalScores.foldLeft(0.0)((x, y) => x+y) / historicalScores.size
-    println("average: ", average)
-
-    val key = address.toString
-    scoreHistory = history.updated(key, historicalScores)
-
-    score < 0.78 && average < 0.7
-  }
 
   def main(args: Array[String]) {
 
@@ -65,7 +37,7 @@ object FraudCheckerServer extends Directives with JsonSupport{
     implicit val materializer = ActorMaterializer()
     implicit val executionContext = system.dispatcher
 
-    val scorer = system.actorOf(AddressFraudProbabilityScorer.props)
+    val middleman = system.actorOf(MiddleMan.props)
     implicit val timeout = Timeout(5 seconds)
 
     val route =
@@ -73,16 +45,16 @@ object FraudCheckerServer extends Directives with JsonSupport{
         post {
           entity(as[Address]) { address =>
             println("received: ", address)
-            val fut = scorer ? ScoreAddress(address)
+            val fut = middleman ? ScoreRequest(address)
             onComplete(fut){
               case Success(s) => {
-                val score = s.asInstanceOf[Double]
-                println("score: ", score)
-                val status = judge(score, address, scoreHistory)
-                complete(ReturnJSON(status, address))
+                val status = s.asInstanceOf[Boolean]
+                val returnJSON = ReturnJSON(status, address)
+                println(returnJSON)
+                complete(returnJSON)
               }
               case Failure(ex) => {
-                failWith(ex) // this doesn't expose the error details to the HTTP client
+                failWith(ex) // this doesn't expose the error details to the HTTP client but just gives HTTP 500
               }
             }
           }
