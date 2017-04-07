@@ -21,7 +21,7 @@ object ScoringServer {
       ConfigFactory.parseString("akka.remote.netty.tcp.port=" + port)
       .withFallback(ConfigFactory.load("scoring-server"))
 
-    val systemName = config.getString("com.paidy.server.scoring-server-system")
+    val systemName = config.getString("com.paidy.server.actor-system")
 
     println(s"Launching scoring server with Actor System name = ${systemName}, port=${config.getString("akka.remote.netty.tcp.port")}")
 
