@@ -1,7 +1,8 @@
 package com.paidy.authorizations.actors
 
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, ActorLogging, Props}
 import akka.cluster.pubsub.DistributedPubSub
+import akka.cluster.pubsub.DistributedPubSubMediator.Send
 import akka.pattern._
 import akka.util.Timeout
 import com.paidy.authorizations.actors.AddressFraudProbabilityScorer.ScoreAddress
@@ -10,6 +11,7 @@ import com.paidy.authorizations.actors.ScorerDestination.{ScoreRequest, ScoreRes
 import com.paidy.domain.Address
 
 import scala.collection.immutable.Queue
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.concurrent.duration._
 
 /**
@@ -23,22 +25,20 @@ object ScoreHistoryCacher {
   def props: Props = Props(new ScoreHistoryCacher)
 }
 
-class ScoreHistoryCacher extends Actor {
+class ScoreHistoryCacher extends Actor with ActorLogging{
+
+  implicit val timeout = Timeout(5 seconds)
+  private implicit val ec = context.dispatcher
 
   // activate the extension
-  val mediator = DistributedPubSub(context.system).mediator
-
-  val referHistoricalScoreUpTo = 10
+  private val mediator = DistributedPubSub(context.system).mediator
 
   /**
    *  Internal state of the actor, caching score histories
    *  Only update it from inside the receive method
    */
-  var scoreHistory = Map[String, Queue[Double]]()
-
-  val scorer = context.actorOf(AddressFraudProbabilityScorer.props)
-  implicit val timeout = Timeout(5 seconds)
-  implicit val excecutionContext = context.dispatcher
+  private var scoreHistory = Map[String, Queue[Double]]()
+  private val referHistoricalScoreUpTo = 10
 
   def judgeByHistoricalScores(historicalScores: Queue[Double]): Boolean = {
     if(historicalScores.size < 10)
@@ -57,24 +57,29 @@ class ScoreHistoryCacher extends Actor {
 
   override def receive: Receive = {
     case StatusRequest(address) =>
-      println("middleman received scoring request: ", address)
+      log.info(s"${this.getClass} received status request: $address")
 
       val key = address.toString
 
       // freeze the score history so that it's not updated while waiting for the current score
       val scoreHistoryAsOfRequested = scoreHistory.getOrElse(key, Queue[Double]())
+      log.debug("score history as of request time:¥n", scoreHistoryAsOfRequested)
 
-      val message = ScoreAddress(address)
-      val askFut = scorer ? message
+      val askFut = mediator ? Send(path = "/user/scorer", msg = ScoreAddress(address), localAffinity = false)
       askFut
         .mapTo[ScoreResponse]
-        .map(res => StatusResponse(judge(res.score, scoreHistoryAsOfRequested), address))
+        .map(res => {
+          log.info(s"${this.getClass} received score response: $address")
+          StatusResponse(judge(res.score, scoreHistoryAsOfRequested), address)
+        })
         .pipeTo(sender())
-      //mediator ! Send(path = "/user/scorer", msg = ScoreAddress(address), localAffinity = false)
 
     case ScoreUpdateRequest(score, address) =>
+      log.info(s"${this.getClass} received score update: $address")
+
       val key = address.toString
       val historicalScores = scoreHistory.getOrElse(key, Queue[Double]())
+      log.info(s"${this.getClass} previous historical scores:¥n$historicalScores")
 
       val N: Int = referHistoricalScoreUpTo - 1
       val updatedHistoricalScores =
@@ -88,6 +93,9 @@ class ScoreHistoryCacher extends Actor {
           //historicalScores.size > N, but this should never happen...
           historicalScores.enqueue(score)
         }
+
+      log.info(s"${this.getClass} updated historical scores:¥n$updatedHistoricalScores")
+
       scoreHistory.updated(key, updatedHistoricalScores)
   }
 }
