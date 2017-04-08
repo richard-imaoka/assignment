@@ -1,38 +1,36 @@
 package com.paidy.server
 
 import akka.actor.{ActorRef, ActorSystem}
-import akka.stream.ActorMaterializer
 import akka.cluster.Cluster
-import com.paidy.authorizations.actors.ScorerDestination
+import com.paidy.authorizations.actors.MiddleMan
 import com.typesafe.config.ConfigFactory
 
 import scala.io.StdIn
 
 /**
-  * Created by yunishiyama on 2017/04/07.
+  * Created by yunishiyama on 2017/04/08.
   */
-object ScoringServer {
+object ScoreHistoryCacheServer {
 
   def main(args: Array[String]): Unit = {
-
     val port: String = if( args.size > 0 ) args(0) else "0" //0 assigns a random port number
 
     val config =
       ConfigFactory.parseString("akka.remote.netty.tcp.port=" + port)
-      .withFallback(ConfigFactory.load("scoring-server"))
+        .withFallback(ConfigFactory.load("cache-server"))
 
     val systemName = config.getString("com.paidy.cluster-system")
 
-    println(s"Launching scoring server with Actor System name = ${systemName}, port=${config.getString("akka.remote.netty.tcp.port")}")
+    println(s"Launching cache server with Actor System name = ${systemName}, port=${config.getString("akka.remote.netty.tcp.port")}")
 
     implicit val system = ActorSystem(systemName,config)
     implicit val executionContext = system.dispatcher
 
-    val scorer: ActorRef = system.actorOf(ScorerDestination.props)
+    val cacher: ActorRef = system.actorOf(MiddleMan.props)
 
     Cluster(system)
 
-    println("Scoring server started.\nPress RETURN to stop...")
+    println("Caching server started.\nPress RETURN to stop...")
     StdIn.readLine()
     system.terminate()
   }
