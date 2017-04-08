@@ -26,9 +26,7 @@ object ScoreHistoryCacheServer {
     implicit val system = ActorSystem(systemName,config)
     implicit val executionContext = system.dispatcher
 
-    val cacher: ActorRef = system.actorOf(ScoreHistoryCacher.props)
-
-    Cluster(system)
+    val cacher: ActorRef = system.actorOf(ScoreHistoryCacher.props, "cache")
 
     println("Caching server started.\nPress RETURN to stop...")
     StdIn.readLine()

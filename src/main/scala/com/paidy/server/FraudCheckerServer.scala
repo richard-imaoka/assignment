@@ -1,14 +1,16 @@
 package com.paidy.server
 
 import akka.actor.ActorSystem
+import akka.cluster.Cluster
+import akka.cluster.pubsub.DistributedPubSub
+import akka.cluster.pubsub.DistributedPubSubMediator.Send
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.server.Directives
 import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import com.paidy.authorizations.actors.ScoreHistoryCacher
-import com.paidy.authorizations.actors.ScoreHistoryCacher.StatusRequest
+import com.paidy.authorizations.actors.ScoreHistoryCacher.{StatusRequest, StatusResponse}
 import com.paidy.domain.Address
 import com.typesafe.config.ConfigFactory
 import spray.json._
@@ -32,12 +34,19 @@ case class ReturnJSON(status: Boolean, address: Address)
 object FraudCheckerServer extends Directives with JsonSupport{
 
   def main(args: Array[String]) {
+    val port: String = if( args.size > 0 ) args(0) else "0" //0 assigns a random port number
 
-    implicit val system = ActorSystem("my-system",ConfigFactory.load())
+    val config =
+      ConfigFactory.parseString("akka.remote.netty.tcp.port=" + port)
+        .withFallback(ConfigFactory.load("fraud-checker-http"))
+
+    val systemName = config.getString("com.paidy.cluster-system")
+
+    implicit val system = ActorSystem(systemName, config)
     implicit val materializer = ActorMaterializer()
     implicit val executionContext = system.dispatcher
 
-    val middleman = system.actorOf(ScoreHistoryCacher.props)
+    val mediator = DistributedPubSub(system).mediator
     implicit val timeout = Timeout(5 seconds)
 
     val route =
@@ -45,11 +54,11 @@ object FraudCheckerServer extends Directives with JsonSupport{
         post {
           entity(as[Address]) { address =>
             println("received: ", address)
-            val fut = middleman ? StatusRequest(address)
+            val fut = mediator ? Send(path = "user/cache", msg = StatusRequest(address), localAffinity = false)
             onComplete(fut){
-              case Success(s) => {
-                val status = s.asInstanceOf[Boolean]
-                val returnJSON = ReturnJSON(status, address)
+              case Success(r) => {
+                val response = r.asInstanceOf[StatusResponse]
+                val returnJSON = ReturnJSON(response.status, response.address)
                 println(returnJSON)
                 complete(returnJSON)
               }

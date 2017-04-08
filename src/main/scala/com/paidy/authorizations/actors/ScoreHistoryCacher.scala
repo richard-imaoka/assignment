@@ -2,16 +2,15 @@ package com.paidy.authorizations.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.cluster.pubsub.DistributedPubSub
-import akka.cluster.pubsub.DistributedPubSubMediator.Send
+import akka.cluster.pubsub.DistributedPubSubMediator.{Put, Send, Subscribe}
 import akka.pattern._
 import akka.util.Timeout
 import com.paidy.authorizations.actors.AddressFraudProbabilityScorer.ScoreAddress
 import com.paidy.authorizations.actors.ScoreHistoryCacher.{ScoreUpdateRequest, StatusRequest, StatusResponse}
-import com.paidy.authorizations.actors.ScorerDestination.{ScoreRequest, ScoreResponse}
+import com.paidy.authorizations.actors.ScorerDestination.ScoreResponse
 import com.paidy.domain.Address
 
 import scala.collection.immutable.Queue
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.concurrent.duration._
 
 /**
@@ -26,12 +25,15 @@ object ScoreHistoryCacher {
 }
 
 class ScoreHistoryCacher extends Actor with ActorLogging{
+  println(getClass, this.self.path)
 
   implicit val timeout = Timeout(5 seconds)
   private implicit val ec = context.dispatcher
 
   // activate the extension
   private val mediator = DistributedPubSub(context.system).mediator
+  mediator ! Put(self)
+  mediator ! Subscribe("cacher", self)
 
   /**
    *  Internal state of the actor, caching score histories

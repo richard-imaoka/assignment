@@ -5,6 +5,11 @@ lazy val root = (project in file(".")).
       scalaVersion := "2.12.1",
       version      := "0.1.0-SNAPSHOT"
     )),
+    javaOptions ++= Seq(
+      "-Dcom.sun.management.jmxremote.port=9999",
+      "-Dcom.sun.management.jmxremote.authenticate=false",
+      "-Dcom.sun.management.jmxremote.ssl=false"
+    ),
     name := "assignment",
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-actor" % "2.4.17",
