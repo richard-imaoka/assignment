@@ -28,7 +28,7 @@ object ScoringServer {
     implicit val system = ActorSystem(systemName,config)
     implicit val executionContext = system.dispatcher
 
-    val scorer: ActorRef = system.actorOf(ScorerDestination.props)
+    val scorer: ActorRef = system.actorOf(ScorerDestination.props, "scorer")
 
     Cluster(system)
 
