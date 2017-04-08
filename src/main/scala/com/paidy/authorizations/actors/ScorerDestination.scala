@@ -5,8 +5,10 @@ import akka.cluster.pubsub.DistributedPubSub
 import akka.pattern._
 import akka.util.Timeout
 import com.paidy.authorizations.actors.AddressFraudProbabilityScorer.ScoreAddress
-import com.paidy.authorizations.actors.ScoreHistoryCacher.ScoreRequest
+import com.paidy.authorizations.actors.ScorerDestination.{ScoreRequest, ScoreResponse}
+import com.paidy.domain.Address
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
 /**
   * Created by yunishiyama on 2017/04/08.
@@ -24,10 +26,14 @@ class ScorerDestination extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case ScoreRequest(address) =>
-      (scorer ? ScoreAddress(address)) pipeTo sender()
+      val askScore: Future[Any] = (scorer ? ScoreAddress(address))
+      askScore.map(score => ScoreResponse(score.asInstanceOf[Double], address)) pipeTo sender()
   }
 }
 
 object ScorerDestination {
+  case class ScoreRequest(address: Address)
+  case class ScoreResponse(score: Double, address: Address)
+
   def props: Props = Props(new ScorerDestination)
 }
