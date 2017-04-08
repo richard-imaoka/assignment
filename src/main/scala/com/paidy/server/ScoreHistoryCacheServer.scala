@@ -2,7 +2,7 @@ package com.paidy.server
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.cluster.Cluster
-import com.paidy.authorizations.actors.MiddleMan
+import com.paidy.authorizations.actors.ScoreHistoryCacher
 import com.typesafe.config.ConfigFactory
 
 import scala.io.StdIn
@@ -26,7 +26,7 @@ object ScoreHistoryCacheServer {
     implicit val system = ActorSystem(systemName,config)
     implicit val executionContext = system.dispatcher
 
-    val cacher: ActorRef = system.actorOf(MiddleMan.props)
+    val cacher: ActorRef = system.actorOf(ScoreHistoryCacher.props)
 
     Cluster(system)
 

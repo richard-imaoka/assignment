@@ -4,7 +4,7 @@ import akka.actor.{Actor, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.paidy.authorizations.actors.AddressFraudProbabilityScorer.ScoreAddress
-import com.paidy.authorizations.actors.MiddleMan.ScoreRequest
+import com.paidy.authorizations.actors.ScoreHistoryCacher.ScoreRequest
 import com.paidy.domain.Address
 
 import scala.collection.immutable.Queue
@@ -15,12 +15,12 @@ import scala.util.{Failure, Success}
   * Created by yunishiyama on 2017/04/05.
   */
 
-object MiddleMan {
-  def props: Props = Props(new MiddleMan)
+object ScoreHistoryCacher {
+  def props: Props = Props(new ScoreHistoryCacher)
   case class ScoreRequest(address: Address)
 }
 
-class MiddleMan extends Actor {
+class ScoreHistoryCacher extends Actor {
 
   /**
    *  Internal state of the actor, caching score histories

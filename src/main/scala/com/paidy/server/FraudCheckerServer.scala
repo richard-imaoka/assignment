@@ -7,8 +7,8 @@ import akka.http.scaladsl.server.Directives
 import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import com.paidy.authorizations.actors.{AddressFraudProbabilityScorer, MiddleMan}
-import com.paidy.authorizations.actors.MiddleMan.ScoreRequest
+import com.paidy.authorizations.actors.{AddressFraudProbabilityScorer, ScoreHistoryCacher}
+import com.paidy.authorizations.actors.ScoreHistoryCacher.ScoreRequest
 import com.paidy.domain.Address
 import com.typesafe.config.ConfigFactory
 import spray.json._
@@ -37,7 +37,7 @@ object FraudCheckerServer extends Directives with JsonSupport{
     implicit val materializer = ActorMaterializer()
     implicit val executionContext = system.dispatcher
 
-    val middleman = system.actorOf(MiddleMan.props)
+    val middleman = system.actorOf(ScoreHistoryCacher.props)
     implicit val timeout = Timeout(5 seconds)
 
     val route =
