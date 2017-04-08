@@ -1,26 +1,34 @@
 package com.paidy.authorizations.actors
 
 import akka.actor.{Actor, Props}
-import akka.pattern.ask
+import akka.cluster.pubsub.DistributedPubSub
+import akka.pattern._
 import akka.util.Timeout
 import com.paidy.authorizations.actors.AddressFraudProbabilityScorer.ScoreAddress
-import com.paidy.authorizations.actors.ScoreHistoryCacher.ScoreRequest
+import com.paidy.authorizations.actors.ScoreHistoryCacher.{ScoreUpdateRequest, StatusRequest, StatusResponse}
+import com.paidy.authorizations.actors.ScorerDestination.{ScoreRequest, ScoreResponse}
 import com.paidy.domain.Address
 
 import scala.collection.immutable.Queue
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
 
 /**
   * Created by yunishiyama on 2017/04/05.
   */
 
 object ScoreHistoryCacher {
+  case class StatusResponse(status: Boolean, address: Address)
+  case class StatusRequest(address: Address)
+  case class ScoreUpdateRequest(score: Double, address: Address)
   def props: Props = Props(new ScoreHistoryCacher)
-  case class ScoreRequest(address: Address)
 }
 
 class ScoreHistoryCacher extends Actor {
+
+  // activate the extension
+  val mediator = DistributedPubSub(context.system).mediator
+
+  val referHistoricalScoreUpTo = 10
 
   /**
    *  Internal state of the actor, caching score histories
@@ -31,22 +39,6 @@ class ScoreHistoryCacher extends Actor {
   val scorer = context.actorOf(AddressFraudProbabilityScorer.props)
   implicit val timeout = Timeout(5 seconds)
   implicit val excecutionContext = context.dispatcher
-
-  def updateHistoricalScores(score: Double, key: String, history: Map[String, Queue[Double]]): Unit = {
-    val historicalScores: Queue[Double] = getHistoricalScoresUpTp10(score, key, history)
-    scoreHistory = history.updated(key, historicalScores)
-  }
-
-  def getHistoricalScoresUpTp10(score: Double, key: String, history: Map[String, Queue[Double]]): Queue[Double] = {
-    val historicalScores = history.getOrElse(key, Queue[Double]())
-
-    if(historicalScores.size == 10){
-      val (_, historical9) = historicalScores.dequeue
-      historical9.enqueue(score)
-    }
-    else
-      historicalScores.enqueue(score)
-  }
 
   def judgeByHistoricalScores(historicalScores: Queue[Double]): Boolean = {
     if(historicalScores.size < 10)
@@ -64,29 +56,38 @@ class ScoreHistoryCacher extends Actor {
   }
 
   override def receive: Receive = {
-    case ScoreRequest(address) =>
+    case StatusRequest(address) =>
       println("middleman received scoring request: ", address)
 
-      // We use Future by the ask pattern, as Scorer only returns double,
-      // but we need to tie it up to the address (in closure, as callback of future onComplete)
-      val fut = scorer ? ScoreAddress(address)
-      val scoreRequestor = sender()
+      val key = address.toString
 
-      fut.onComplete{
-        case Success(data) =>
-          println("middleman received score: ", data)
+      // freeze the score history so that it's not updated while waiting for the current score
+      val scoreHistoryAsOfRequested = scoreHistory.getOrElse(key, Queue[Double]())
 
-          val score = data.asInstanceOf[Double]
-          val key = address.toString
-          val historicalScores = getHistoricalScoresUpTp10(score, key, scoreHistory)
-          val status = judge(score, historicalScores)
+      val message = ScoreAddress(address)
+      val askFut = scorer ? message
+      askFut
+        .mapTo[ScoreResponse]
+        .map(res => StatusResponse(judge(res.score, scoreHistoryAsOfRequested), address))
+        .pipeTo(sender())
+      //mediator ! Send(path = "/user/scorer", msg = ScoreAddress(address), localAffinity = false)
 
-          scoreHistory = scoreHistory.updated(key, historicalScores)
-          scoreRequestor ! status
+    case ScoreUpdateRequest(score, address) =>
+      val key = address.toString
+      val historicalScores = scoreHistory.getOrElse(key, Queue[Double]())
 
-        case Failure(exception) =>
-          println("Middleman failed to get a response from scorer")
-          println(exception)
-      }
+      val N: Int = referHistoricalScoreUpTo - 1
+      val updatedHistoricalScores =
+        if (historicalScores.size < N)
+          historicalScores.enqueue(score)
+        else if (historicalScores.size == N) {
+          val (_, historicalN) = historicalScores.dequeue
+          historicalN.enqueue(score)
+        }
+        else {
+          //historicalScores.size > N, but this should never happen...
+          historicalScores.enqueue(score)
+        }
+      scoreHistory.updated(key, updatedHistoricalScores)
   }
 }

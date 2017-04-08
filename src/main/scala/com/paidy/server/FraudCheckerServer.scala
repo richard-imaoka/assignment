@@ -7,8 +7,8 @@ import akka.http.scaladsl.server.Directives
 import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import com.paidy.authorizations.actors.{AddressFraudProbabilityScorer, ScoreHistoryCacher}
-import com.paidy.authorizations.actors.ScoreHistoryCacher.ScoreRequest
+import com.paidy.authorizations.actors.ScoreHistoryCacher
+import com.paidy.authorizations.actors.ScoreHistoryCacher.StatusRequest
 import com.paidy.domain.Address
 import com.typesafe.config.ConfigFactory
 import spray.json._
@@ -45,7 +45,7 @@ object FraudCheckerServer extends Directives with JsonSupport{
         post {
           entity(as[Address]) { address =>
             println("received: ", address)
-            val fut = middleman ? ScoreRequest(address)
+            val fut = middleman ? StatusRequest(address)
             onComplete(fut){
               case Success(s) => {
                 val status = s.asInstanceOf[Boolean]
