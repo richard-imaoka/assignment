@@ -1,3 +1,6 @@
+enablePlugins(JavaAppPackaging)
+enablePlugins(DockerPlugin)
+
 lazy val root = (project in file(".")).
   settings(
     inThisBuild(List(
@@ -13,6 +16,9 @@ lazy val root = (project in file(".")).
       "com.typesafe.akka" %% "akka-http" % "10.0.5",
       "com.typesafe.akka" %% "akka-http-spray-json" % "10.0.5",
       "org.scalatest" %% "scalatest" % "3.0.1" % Test
-    )
-
+    ),
+    //fork in run := true
+    dockerEntrypoint := Seq( "bin/fraud-checker-server" ),
+    dockerBaseImage := "flangelier/scala"
   )
+
