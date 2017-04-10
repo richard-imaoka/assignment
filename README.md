@@ -138,12 +138,14 @@ There was an internal server error.
 
 ## DESIGN
 
-![individual](images/individual.png)
+<img src="images/individual.png" width="300">
 
-![step1](images/step1.png)
+<img src="images/step1.png" width="300">
 
-![step2](images/step2.png)
+<img src="images/step2.png" width="300">
 
-![step3](images/step3.png)
+<img src="images/step3.png" width="300">
 
-![step4](images/step4.png)
+<img src="images/step4.png" width="300">
+
+<img src="images/step5.png" width="300">
