@@ -138,14 +138,52 @@ There was an internal server error.
 
 ## DESIGN
 
-<img src="images/individual.png" width="300">
 
-<img src="images/step1.png" width="300">
+### Scalability 
 
-<img src="images/step2.png" width="300">
+<img src="images/individual.png" width="480">
 
-<img src="images/step3.png" width="300">
+The reason for having the three separate servers is to allow you scale each of them individually.
+(Originally I was trying to use Kubernetes and increase replicas of each server in deployment... )
 
-<img src="images/step4.png" width="300">
+### Step 1
 
-<img src="images/step5.png" width="300">
+<img src="images/step1.png" width="480">
+
+When `FraudStatusHttpServer` receives a request, 
+
+* 1: It converts the message into `StatusRequest` and send it to `FraudStatusGateway`
+  * 1.1: The destination `FraudStatusGateway` actor is chosen by [Akka's distributed pub sub send](http://doc.akka.io/docs/akka/2.4.17/scala/distributed-pub-sub.html#Send),
+  so that requests are load-balanced
+  
+* 6: Finally `FraudStatusHttpServer` receives `StatusResponse` from  `FraudStatusGateway`
+
+### Step 2
+
+<img src="images/step2.png" width="480">
+
+* 2: Then `ScoreRequest` is sent to a `FraudScoreGateway` actor 
+  * 2.2: Like 1.1: it uses [Akka's distributed pub sub send](http://doc.akka.io/docs/akka/2.4.17/scala/distributed-pub-sub.html#Send)
+* 3: `FraudScoreGateway` passes `ScoreAddress` to an `AddressFraudProbabilityScorer` actor
+* 4: `AddressFraudProbabilityScorer` sends back a `Double`, which represents a score  
+* 5: `FraudScoreGateway` actor sends `ScoreResponse` to `FraudStatusGateway`
+
+### Step 3
+
+<img src="images/step3.png" width="480">
+
+* 6: `FraudScoreGateway` judges the status from the current score returned by 5: 
+and the historical scores up to last 10, then sends back a `StatusResponse` to the HTTP server
+
+`FraudScoreGateway` internally holds a key-value map (`scala.collection.immutable.Map`) to keep track of
+historical scores for different addresses. Each address has a unique key in the map.
+
+### Step 4
+
+<img src="images/step4.png" width="480">
+
+### Step 5
+
+<img src="images/step5.png" width="480">
+
+### Caveats
