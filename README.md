@@ -182,8 +182,20 @@ historical scores for different addresses. Each address has a unique key in the 
 
 <img src="images/step4.png" width="480">
 
-### Step 5
-
-<img src="images/step5.png" width="480">
+* 7: Right after `FraudScoreGateway` receives `ScoreResponse` as in 4, it actually publishes 'ScoreUpdateRequest' to 
+`FraudStatusGateway` actors too, so that 'EVERY' `FraudStatusGateway` actor updates historical scores with the latest score
 
 ### Caveats
+
+I didn't have time to implement solutions to these:
+
+* For 4 ~ 5: also, if a message is lost, then `FraudStatusGateway` actors could miss historical scores, or inconsistent history across the actors
+  * Akka Distributed Pub/Sub has delivery guarantee as [at most once](http://doc.akka.io/docs/akka/2.4.17/scala/distributed-pub-sub.html#Delivery_Guarantee),
+  which means messages can be lost
+  * As in the linked doc Kafka might be help ... I'm not very familiar with it to be honest
+
+* For 6: Currently `FraudStatusServer` / `FraudStatusGateway` doesn't have resiliency, 
+which means if one of the servers/actors goes down, and restarted, the restarted one has no history
+  * This could be avoided by persistence like a SQL store
+  * Maybe putting a PersistentActor in the middle would work well
+  
