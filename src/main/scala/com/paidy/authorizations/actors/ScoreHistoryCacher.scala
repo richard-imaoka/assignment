@@ -25,8 +25,6 @@ object ScoreHistoryCacher {
 }
 
 class ScoreHistoryCacher extends Actor with ActorLogging{
-  println(getClass, this.self.path)
-
   implicit val timeout = Timeout(5 seconds)
   private implicit val ec = context.dispatcher
 
