@@ -1,5 +1,7 @@
 ## Overview
 
+![overview](images/overview.png)
+
 The entire application consists of three separate servers, 
 
 * FraudStatusHttpServer
