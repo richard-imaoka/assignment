@@ -42,6 +42,20 @@ class ScoreHistoryCacher extends Actor with ActorLogging{
   private var scoreHistory = Map[String, Queue[Double]]()
   private val referHistoricalScoreUpTo = 10
 
+  def takeUpToNlastScores(score: Double, historicalScores: Queue[Double], N: Int): Queue[Double] ={
+    if (historicalScores.size < N)
+      historicalScores.enqueue(score)
+    else if (historicalScores.size == N) {
+      val (_, historicalUpToNminus1) = historicalScores.dequeue
+      historicalUpToNminus1.enqueue(score) //N - 1 + new element = N elements
+    }
+    else {
+      //historicalScores.size > N, but this should never happen...
+      log.warning(s"historical scores had ${historicalScores.size} elements, this should have never happened")
+      historicalScores.slice(0, N).enqueue(score) //slice(0,N) returns N-1 sized queue
+    }
+  }
+
   def judgeByHistoricalScores(historicalScores: Queue[Double]): Boolean = {
     if(historicalScores.size < 10)
       true
@@ -60,7 +74,6 @@ class ScoreHistoryCacher extends Actor with ActorLogging{
   override def receive: Receive = {
     case StatusRequest(address) =>
       log.info(s"${this.getClass} received status request: $address")
-
       val key = address.toString
 
       // freeze the score history so that it's not updated while waiting for the current score
@@ -78,26 +91,13 @@ class ScoreHistoryCacher extends Actor with ActorLogging{
 
     case ScoreUpdateRequest(score, address) =>
       log.info(s"${this.getClass} received score update: $address")
-
       val key = address.toString
       val historicalScores = scoreHistory.getOrElse(key, Queue[Double]())
-      log.info(s"${this.getClass} previous historical scores:\n$historicalScores")
 
-      val N: Int = referHistoricalScoreUpTo - 1
-      val updatedHistoricalScores =
-        if (historicalScores.size < N)
-          historicalScores.enqueue(score)
-        else if (historicalScores.size == N) {
-          val (_, historicalN) = historicalScores.dequeue
-          historicalN.enqueue(score)
-        }
-        else {
-          //historicalScores.size > N, but this should never happen...
-          historicalScores.enqueue(score)
-        }
+      log.info(s"${this.getClass} previous historical scores:\n$historicalScores")
+      val updatedHistoricalScores = takeUpToNlastScores(score, historicalScores, referHistoricalScoreUpTo)
 
       log.info(s"${this.getClass} updated historical scores:\n$updatedHistoricalScores")
-
       scoreHistory = scoreHistory.updated(key, updatedHistoricalScores)
   }
 }
