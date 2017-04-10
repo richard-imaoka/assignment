@@ -1,7 +1,6 @@
 package com.paidy.server
 
 import akka.actor.ActorSystem
-import akka.cluster.Cluster
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Send
 import akka.http.scaladsl.Http
@@ -54,7 +53,7 @@ object FraudCheckerServer extends Directives with JsonSupport{
         post {
           entity(as[Address]) { address =>
             println("received: ", address)
-            val fut = mediator ? Send(path = "user/cache", msg = StatusRequest(address), localAffinity = false)
+            val fut = mediator ? Send(path = "/user/cache", msg = StatusRequest(address), localAffinity = false)
             onComplete(fut){
               case Success(r) => {
                 val response = r.asInstanceOf[StatusResponse]

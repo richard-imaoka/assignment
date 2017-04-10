@@ -25,6 +25,8 @@ object ScoreHistoryCacher {
 }
 
 class ScoreHistoryCacher extends Actor with ActorLogging{
+  log.info(s"${getClass} ${self.path} starting" )
+
   implicit val timeout = Timeout(5 seconds)
   private implicit val ec = context.dispatcher
 
@@ -63,7 +65,7 @@ class ScoreHistoryCacher extends Actor with ActorLogging{
 
       // freeze the score history so that it's not updated while waiting for the current score
       val scoreHistoryAsOfRequested = scoreHistory.getOrElse(key, Queue[Double]())
-      log.debug("score history as of request time:¥n", scoreHistoryAsOfRequested)
+      log.debug("score history as of request time:\n", scoreHistoryAsOfRequested)
 
       val askFut = mediator ? Send(path = "/user/scorer", msg = ScoreAddress(address), localAffinity = false)
       askFut
@@ -79,7 +81,7 @@ class ScoreHistoryCacher extends Actor with ActorLogging{
 
       val key = address.toString
       val historicalScores = scoreHistory.getOrElse(key, Queue[Double]())
-      log.info(s"${this.getClass} previous historical scores:¥n$historicalScores")
+      log.info(s"${this.getClass} previous historical scores:\n$historicalScores")
 
       val N: Int = referHistoricalScoreUpTo - 1
       val updatedHistoricalScores =
@@ -94,8 +96,8 @@ class ScoreHistoryCacher extends Actor with ActorLogging{
           historicalScores.enqueue(score)
         }
 
-      log.info(s"${this.getClass} updated historical scores:¥n$updatedHistoricalScores")
+      log.info(s"${this.getClass} updated historical scores:\n$updatedHistoricalScores")
 
-      scoreHistory.updated(key, updatedHistoricalScores)
+      scoreHistory = scoreHistory.updated(key, updatedHistoricalScores)
   }
 }

@@ -1,8 +1,6 @@
 package com.paidy.server
 
 import akka.actor.{ActorRef, ActorSystem}
-import akka.cluster.Cluster
-import akka.routing.FromConfig
 import com.paidy.authorizations.actors.ScoreHistoryCacher
 import com.typesafe.config.ConfigFactory
 
@@ -27,7 +25,7 @@ object ScoreHistoryCacheServer {
     implicit val system = ActorSystem(systemName,config)
     implicit val executionContext = system.dispatcher
 
-    val cacher: ActorRef = system.actorOf(FromConfig.props(ScoreHistoryCacher.props), "cache")
+    val cacher: ActorRef = system.actorOf(ScoreHistoryCacher.props, "cache")
 
     println("Caching server started.\nPress RETURN to stop...")
     StdIn.readLine()
