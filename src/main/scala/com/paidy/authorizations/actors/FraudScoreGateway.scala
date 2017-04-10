@@ -6,15 +6,15 @@ import akka.cluster.pubsub.DistributedPubSubMediator.{Publish, Send}
 import akka.pattern._
 import akka.util.Timeout
 import com.paidy.authorizations.actors.AddressFraudProbabilityScorer.ScoreAddress
-import com.paidy.authorizations.actors.ScoreHistoryCacher.ScoreUpdateRequest
-import com.paidy.authorizations.actors.ScorerDestination.{ScoreRequest, ScoreResponse}
+import com.paidy.authorizations.actors.FraudStatusGateway.ScoreUpdateRequest
+import com.paidy.authorizations.actors.FraudScoreGateway.{ScoreRequest, ScoreResponse}
 import com.paidy.domain.Address
 
 import scala.concurrent.duration._
 /**
   * Created by yunishiyama on 2017/04/08.
   */
-class ScorerDestination extends Actor with ActorLogging {
+class FraudScoreGateway extends Actor with ActorLogging {
   import akka.cluster.pubsub.DistributedPubSubMediator.Put
   println(getClass, this.self.path)
 
@@ -33,15 +33,16 @@ class ScorerDestination extends Actor with ActorLogging {
         .mapTo[Double]
         .map(score => {
           mediator ? Publish("cacher", ScoreUpdateRequest(score, address))
+          log.info(s"returning score = ${score}")
           ScoreResponse(score, address)
         })
         .pipeTo(sender())
   }
 }
 
-object ScorerDestination {
+object FraudScoreGateway {
   case class ScoreRequest(address: Address)
   case class ScoreResponse(score: Double, address: Address)
 
-  def props: Props = Props(new ScorerDestination)
+  def props: Props = Props(new FraudScoreGateway)
 }

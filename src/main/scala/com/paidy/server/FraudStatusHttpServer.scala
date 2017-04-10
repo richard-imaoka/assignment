@@ -9,7 +9,7 @@ import akka.http.scaladsl.server.Directives
 import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import com.paidy.authorizations.actors.ScoreHistoryCacher.{StatusRequest, StatusResponse}
+import com.paidy.authorizations.actors.FraudStatusGateway.{StatusRequest, StatusResponse}
 import com.paidy.domain.Address
 import com.typesafe.config.ConfigFactory
 import spray.json._
@@ -30,7 +30,7 @@ case class ReturnJSON(status: Boolean, address: Address)
 //read port from config
 //service failure handling
 
-object FraudCheckerServer extends Directives with JsonSupport{
+object FraudStatusHttpServer extends Directives with JsonSupport{
 
   def main(args: Array[String]) {
     val port: String = if( args.size > 0 ) args(0) else "0" //0 assigns a random port number

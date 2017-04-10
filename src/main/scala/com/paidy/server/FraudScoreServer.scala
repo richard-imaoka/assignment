@@ -3,7 +3,7 @@ package com.paidy.server
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.ActorMaterializer
 import akka.cluster.Cluster
-import com.paidy.authorizations.actors.ScorerDestination
+import com.paidy.authorizations.actors.FraudScoreGateway
 import com.typesafe.config.ConfigFactory
 
 import scala.io.StdIn
@@ -11,7 +11,7 @@ import scala.io.StdIn
 /**
   * Created by yunishiyama on 2017/04/07.
   */
-object ScoringServer {
+object FraudScoreServer {
 
   def main(args: Array[String]): Unit = {
 
@@ -28,7 +28,7 @@ object ScoringServer {
     implicit val system = ActorSystem(systemName,config)
     implicit val executionContext = system.dispatcher
 
-    val scorer: ActorRef = system.actorOf(ScorerDestination.props, "scorer")
+    val scorer: ActorRef = system.actorOf(FraudScoreGateway.props, "scorer")
 
     Cluster(system)
 

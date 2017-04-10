@@ -5,9 +5,8 @@ import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.{Put, Send, Subscribe}
 import akka.pattern._
 import akka.util.Timeout
-import com.paidy.authorizations.actors.AddressFraudProbabilityScorer.ScoreAddress
-import com.paidy.authorizations.actors.ScoreHistoryCacher.{ScoreUpdateRequest, StatusRequest, StatusResponse}
-import com.paidy.authorizations.actors.ScorerDestination.{ScoreRequest, ScoreResponse}
+import com.paidy.authorizations.actors.FraudStatusGateway.{ScoreUpdateRequest, StatusRequest, StatusResponse}
+import com.paidy.authorizations.actors.FraudScoreGateway.{ScoreRequest, ScoreResponse}
 import com.paidy.domain.Address
 
 import scala.collection.immutable.Queue
@@ -17,14 +16,14 @@ import scala.concurrent.duration._
   * Created by yunishiyama on 2017/04/05.
   */
 
-object ScoreHistoryCacher {
+object FraudStatusGateway {
   case class StatusResponse(status: Boolean, address: Address)
   case class StatusRequest(address: Address)
   case class ScoreUpdateRequest(score: Double, address: Address)
-  def props: Props = Props(new ScoreHistoryCacher)
+  def props: Props = Props(new FraudStatusGateway)
 }
 
-class ScoreHistoryCacher extends Actor with ActorLogging{
+class FraudStatusGateway extends Actor with ActorLogging{
   log.info(s"${getClass} ${self.path} starting" )
 
   implicit val timeout = Timeout(5 seconds)
@@ -87,8 +86,8 @@ class ScoreHistoryCacher extends Actor with ActorLogging{
         .map(res => {
           log.info(s"${this.getClass} received score response: $address")
           val status = judge(res.score, scoreHistoryAsOfRequested)
-          log.info(s"Fraud check status = ${status}, with current score = ${res.score}, and historical scores:\n${scoreHistoryAsOfRequested}")
-          StatusResponse(, address)
+          log.info(s"Fraud check status = ${status}, with current score = ${res.score}, and historical scores: ${scoreHistoryAsOfRequested}")
+          StatusResponse(status, address)
         })
         .pipeTo(sender())
 
