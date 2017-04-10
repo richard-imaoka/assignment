@@ -138,3 +138,12 @@ There was an internal server error.
 
 ## DESIGN
 
+![individual](images/individual.png)
+
+![step1](images/step1.png)
+
+![step2](images/step2.png)
+
+![step3](images/step3.png)
+
+![step4](images/step4.png)
