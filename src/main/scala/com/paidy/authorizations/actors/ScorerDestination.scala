@@ -28,6 +28,7 @@ class ScorerDestination extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case ScoreRequest(address) =>
+      log.info(s"received ${ScoreRequest(address)}")
       (scorer ? ScoreAddress(address))
         .mapTo[Double]
         .map(score => {

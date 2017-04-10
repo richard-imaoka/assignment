@@ -7,7 +7,7 @@ import akka.pattern._
 import akka.util.Timeout
 import com.paidy.authorizations.actors.AddressFraudProbabilityScorer.ScoreAddress
 import com.paidy.authorizations.actors.ScoreHistoryCacher.{ScoreUpdateRequest, StatusRequest, StatusResponse}
-import com.paidy.authorizations.actors.ScorerDestination.ScoreResponse
+import com.paidy.authorizations.actors.ScorerDestination.{ScoreRequest, ScoreResponse}
 import com.paidy.domain.Address
 
 import scala.collection.immutable.Queue
@@ -78,14 +78,17 @@ class ScoreHistoryCacher extends Actor with ActorLogging{
 
       // freeze the score history so that it's not updated while waiting for the current score
       val scoreHistoryAsOfRequested = scoreHistory.getOrElse(key, Queue[Double]())
-      log.debug("score history as of request time:\n", scoreHistoryAsOfRequested)
+      log.info("score history as of request time:\n", scoreHistoryAsOfRequested)
 
-      val askFut = mediator ? Send(path = "/user/scorer", msg = ScoreAddress(address), localAffinity = false)
+      val askFut = mediator ? Send(path = "/user/scorer", msg = ScoreRequest(address), localAffinity = false)
+
       askFut
         .mapTo[ScoreResponse]
         .map(res => {
           log.info(s"${this.getClass} received score response: $address")
-          StatusResponse(judge(res.score, scoreHistoryAsOfRequested), address)
+          val status = judge(res.score, scoreHistoryAsOfRequested)
+          log.info(s"Fraud check status = ${status}, with current score = ${res.score}, and historical scores:\n${scoreHistoryAsOfRequested}")
+          StatusResponse(, address)
         })
         .pipeTo(sender())
 
