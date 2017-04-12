@@ -3,6 +3,7 @@ package com.paidy.server
 import akka.actor.{ActorRef, ActorSystem}
 import com.paidy.authorizations.actors.FraudStatusGateway
 import com.typesafe.config.ConfigFactory
+import sample.cluster.factorial.NetworkConfig
 
 import scala.io.StdIn
 
@@ -12,17 +13,21 @@ import scala.io.StdIn
 object FraudStatusServer {
 
   def main(args: Array[String]): Unit = {
-    val port: String = if( args.size > 0 ) args(0) else "0" //0 assigns a random port number
+    val port = if (args.isEmpty) "0" else args(0)
 
-    val config =
-      ConfigFactory.parseString("akka.remote.netty.tcp.port=" + port)
-        .withFallback(ConfigFactory.load("cache-server"))
+    val internalIp = NetworkConfig.hostLocalAddress
 
-    val systemName = config.getString("com.paidy.cluster-system")
+    val appConfig = ConfigFactory.load("scoring-server")
+    val clusterName = appConfig.getString("com.paidy.cluster-system")
 
-    println(s"Launching cache server with Actor System name = ${systemName}, port=${config.getString("akka.remote.netty.tcp.port")}")
+    val config = ConfigFactory.parseString(s"akka.remote.netty.tcp.port=$port").
+      withFallback(ConfigFactory.parseString(s"akka.remote.netty.tcp.bind-hostname=$internalIp")).
+      withFallback(NetworkConfig.seedsConfig(appConfig, clusterName)).
+      withFallback(appConfig)
 
-    implicit val system = ActorSystem(systemName,config)
+    println(s"Launching cache server with Actor System name = ${clusterName}, port=${config.getString("akka.remote.netty.tcp.port")}")
+
+    implicit val system = ActorSystem(clusterName,config)
     implicit val executionContext = system.dispatcher
 
     val cacher: ActorRef = system.actorOf(FraudStatusGateway.props, "cache")

@@ -1,10 +1,11 @@
 package com.paidy.server
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import akka.cluster.Cluster
 import com.paidy.authorizations.actors.FraudScoreGateway
 import com.typesafe.config.ConfigFactory
+import sample.cluster.factorial.{FactorialBackend, MetricsListener, NetworkConfig}
 
 import scala.io.StdIn
 
@@ -15,17 +16,22 @@ object FraudScoreServer {
 
   def main(args: Array[String]): Unit = {
 
-    val port: String = if( args.size > 0 ) args(0) else "0" //0 assigns a random port number
+    val port = if (args.isEmpty) "0" else args(0)
 
-    val config =
-      ConfigFactory.parseString("akka.remote.netty.tcp.port=" + port)
-      .withFallback(ConfigFactory.load("scoring-server"))
+    val internalIp = NetworkConfig.hostLocalAddress
 
-    val systemName = config.getString("com.paidy.cluster-system")
+    val appConfig = ConfigFactory.load("scoring-server")
+    val clusterName = appConfig.getString("com.paidy.cluster-system")
 
-    println(s"Launching scoring server with Actor System name = ${systemName}, port=${config.getString("akka.remote.netty.tcp.port")}")
+    val config = ConfigFactory.parseString("akka.cluster.roles = [backend]").
+      withFallback(ConfigFactory.parseString(s"akka.remote.netty.tcp.port=$port")).
+      withFallback(ConfigFactory.parseString(s"akka.remote.netty.tcp.bind-hostname=$internalIp")).
+      withFallback(NetworkConfig.seedsConfig(appConfig, clusterName)).
+      withFallback(appConfig)
 
-    implicit val system = ActorSystem(systemName,config)
+    println(s"Launching scoring server with Actor System name = ${clusterName}, port=${config.getString("akka.remote.netty.tcp.port")}")
+
+    implicit val system = ActorSystem(clusterName,config)
     implicit val executionContext = system.dispatcher
 
     val scorer: ActorRef = system.actorOf(FraudScoreGateway.props, "scorer")

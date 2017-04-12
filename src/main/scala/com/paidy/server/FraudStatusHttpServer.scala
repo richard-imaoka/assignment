@@ -12,6 +12,7 @@ import akka.util.Timeout
 import com.paidy.authorizations.actors.FraudStatusGateway.{StatusRequest, StatusResponse}
 import com.paidy.domain.Address
 import com.typesafe.config.ConfigFactory
+import sample.cluster.factorial.NetworkConfig
 import spray.json._
 
 import scala.concurrent.duration._
@@ -33,15 +34,19 @@ case class ReturnJSON(status: Boolean, address: Address)
 object FraudStatusHttpServer extends Directives with JsonSupport{
 
   def main(args: Array[String]) {
-    val port: String = if( args.size > 0 ) args(0) else "0" //0 assigns a random port number
+    val port = if (args.isEmpty) "0" else args(0)
 
-    val config =
-      ConfigFactory.parseString("akka.remote.netty.tcp.port=" + port)
-        .withFallback(ConfigFactory.load("fraud-checker-http"))
+    val internalIp = NetworkConfig.hostLocalAddress
 
-    val systemName = config.getString("com.paidy.cluster-system")
+    val appConfig = ConfigFactory.load("scoring-server")
+    val clusterName = appConfig.getString("com.paidy.cluster-system")
 
-    implicit val system = ActorSystem(systemName, config)
+    val config = ConfigFactory.parseString(s"akka.remote.netty.tcp.port=$port").
+      withFallback(ConfigFactory.parseString(s"akka.remote.netty.tcp.bind-hostname=$internalIp")).
+      withFallback(NetworkConfig.seedsConfig(appConfig, clusterName)).
+      withFallback(appConfig)
+
+    implicit val system = ActorSystem(clusterName, config)
     implicit val materializer = ActorMaterializer()
     implicit val executionContext = system.dispatcher
 
