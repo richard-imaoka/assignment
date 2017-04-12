@@ -18,7 +18,7 @@ lazy val root = (project in file(".")).
       "org.scalatest" %% "scalatest" % "3.0.1" % Test
     ),
     //fork in run := true
-    dockerEntrypoint := Seq( "bin/fraud-checker-server" ),
+    dockerEntrypoint := Seq( "" ),
     dockerBaseImage := "flangelier/scala"
   )
 

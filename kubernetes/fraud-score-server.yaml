@@ -1,0 +1,33 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: fraud-score-server
+  labels:
+    name: fraud-score-server
+    app: akka-sample-cluster
+spec:
+  replicas: 2
+  template:
+    metadata:
+      name: fraud-score-server
+      labels:
+        name: seed-node
+    spec:
+      containers:
+      - name: fraud-score-server
+        image: gcr.io/test1-1384/sources
+        command:
+          - ./bin/activator
+          - "runMain sample.cluster.factorial.FactorialBackend 2551"
+        ports:
+        - name: cluster-port
+          containerPort: 2551
+        env:
+          - name: SEED_DISCOVERY_SERVICE
+            value: discovery-svc.default.svc.cluster.local
+          - name: THIS_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: SEED_PORT
+            value: "2551"
