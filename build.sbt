@@ -22,7 +22,7 @@ lazy val core = (project in file("core")).
 
 lazy val fraudScoreServer = (project in file("fraud-score-server"))
   .settings(
-    name := "raud-score-server",
+    name := "fraud-score-server",
     dockerBaseImage in Docker := "flangelier/scala"
   )
   .dependsOn(core)

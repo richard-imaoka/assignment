@@ -32,7 +32,10 @@ case class ReturnJSON(status: Boolean, address: Address)
 object FraudStatusHttpServer extends Directives with JsonSupport{
 
   def main(args: Array[String]) {
-    val port = if (args.isEmpty) "0" else args(0)
+
+    val portFromEnv = System.getenv("THIS_PORT")
+    println(s"portFromEnv=${portFromEnv}")
+    val port = if (args.size > 0) args(0) else if (portFromEnv != null) portFromEnv else "0"
 
     val internalIp = NetworkConfig.hostLocalAddress
 
@@ -43,6 +46,9 @@ object FraudStatusHttpServer extends Directives with JsonSupport{
       withFallback(ConfigFactory.parseString(s"akka.remote.netty.tcp.bind-hostname=$internalIp")).
       withFallback(NetworkConfig.seedsConfig(appConfig, clusterName)).
       withFallback(appConfig)
+
+    println(s"akka.remote.netty.tcp.port=${config.getValue("akka.remote.netty.tcp.port")}")
+    println(s"akka.remote.netty.tcp.bind-hostname=${config.getValue("akka.remote.netty.tcp.bind-hostname")}")
 
     implicit val system = ActorSystem(clusterName, config)
     implicit val materializer = ActorMaterializer()

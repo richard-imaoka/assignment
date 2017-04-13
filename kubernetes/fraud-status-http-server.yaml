@@ -13,10 +13,7 @@ spec:
     spec:
       containers:
       - name: fraud-status-http-server
-        image: gcr.io/test1-1384/sources
-        command:
-          - ./bin/activator
-          - "runMain sample.cluster.factorial.FactorialBackend 2551"
+        image: asia.gcr.io/assignment-164106/fraud-status-http-server
         ports:
         - name: cluster-port
           containerPort: 2551
