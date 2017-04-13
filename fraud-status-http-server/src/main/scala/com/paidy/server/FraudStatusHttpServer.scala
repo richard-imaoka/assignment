@@ -15,7 +15,6 @@ import com.typesafe.config.ConfigFactory
 import spray.json._
 
 import scala.concurrent.duration._
-import scala.io.StdIn
 import scala.util.{Failure, Success}
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
@@ -75,10 +74,6 @@ object FraudStatusHttpServer extends Directives with JsonSupport{
 
     val bindingFuture = Http().bindAndHandle(route, "localhost", 8080)
 
-    println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
-    StdIn.readLine() // let it run until user presses return
-    bindingFuture
-      .flatMap(_.unbind()) // trigger unbinding from the port
-      .onComplete(_ => system.terminate()) // and shutdown when done
+    println(s"Server online at http://localhost:8080/")
   }
 }

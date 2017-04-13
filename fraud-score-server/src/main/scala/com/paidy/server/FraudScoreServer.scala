@@ -1,11 +1,8 @@
 package com.paidy.server
 
 import akka.actor.{ActorRef, ActorSystem}
-import akka.cluster.Cluster
 import com.paidy.authorizations.actors.FraudScoreGateway
 import com.typesafe.config.ConfigFactory
-
-import scala.io.StdIn
 /**
   * Created by yunishiyama on 2017/04/07.
   */
@@ -33,10 +30,6 @@ object FraudScoreServer {
 
     val scorer: ActorRef = system.actorOf(FraudScoreGateway.props, "scorer")
 
-    Cluster(system)
-
-    println("Scoring server started.\nPress RETURN to stop...")
-    StdIn.readLine()
-    system.terminate()
+    println("Scoring server started.")
   }
 }

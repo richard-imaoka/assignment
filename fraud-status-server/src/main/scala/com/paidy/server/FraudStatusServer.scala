@@ -3,8 +3,6 @@ package com.paidy.server;
 import akka.actor.{ActorRef, ActorSystem}
 import com.paidy.authorizations.actors.FraudStatusGateway
 import com.typesafe.config.ConfigFactory
-
-import scala.io.StdIn
 /**
   * Created by yunishiyama on 2017/04/08.
   */
@@ -30,8 +28,6 @@ object FraudStatusServer {
 
     val cacher: ActorRef = system.actorOf(FraudStatusGateway.props, "cache")
 
-    println("Caching server started.\nPress RETURN to stop...")
-    StdIn.readLine()
-    system.terminate()
+    println(s"${this.getClass.getSimpleName} server started.")
   }
 }
