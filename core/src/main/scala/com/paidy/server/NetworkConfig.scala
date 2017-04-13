@@ -1,4 +1,4 @@
-package sample.cluster.factorial
+package com.paidy.server
 
 import java.net.NetworkInterface
 import java.net.InetAddress

@@ -12,7 +12,6 @@ import akka.util.Timeout
 import com.paidy.authorizations.actors.FraudStatusGateway.{StatusRequest, StatusResponse}
 import com.paidy.domain.Address
 import com.typesafe.config.ConfigFactory
-import sample.cluster.factorial.NetworkConfig
 import spray.json._
 
 import scala.concurrent.duration._
