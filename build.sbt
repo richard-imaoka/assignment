@@ -1,6 +1,3 @@
-enablePlugins(JavaAppPackaging)
-enablePlugins(DockerPlugin)
-
 lazy val root = (project in file("."))
   .aggregate(core, fraudScoreServer, fraudStatusServer, fraudStatusHttpServer)
 
@@ -22,12 +19,15 @@ lazy val core = (project in file("core")).
     name := "core"
   )
 
+
 lazy val fraudScoreServer = (project in file("fraud-score-server"))
   .settings(
     name := "fraud-score-server",
     dockerBaseImage := "flangelier/scala"
   )
   .dependsOn(core)
+  .enablePlugins(JavaAppPackaging)
+  .enablePlugins(DockerPlugin)
 
 lazy val fraudStatusServer = (project in file("fraud-status-server"))
   .settings(
@@ -35,6 +35,8 @@ lazy val fraudStatusServer = (project in file("fraud-status-server"))
     dockerBaseImage := "flangelier/scala"
   )
   .dependsOn(core)
+  .enablePlugins(JavaAppPackaging)
+  .enablePlugins(DockerPlugin)
 
 lazy val fraudStatusHttpServer = (project in file("fraud-status-http-server"))
   .settings(
@@ -42,3 +44,5 @@ lazy val fraudStatusHttpServer = (project in file("fraud-status-http-server"))
     dockerBaseImage := "flangelier/scala"
   )
   .dependsOn(core)
+  .enablePlugins(JavaAppPackaging)
+  .enablePlugins(DockerPlugin)
