@@ -1,14 +1,22 @@
 package com.paidy.authorizations.actors
 
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.{Actor, ActorLogging, Props}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.{Put, Send, Subscribe}
 import akka.pattern._
 import akka.util.Timeout
 import com.paidy.authorizations.actors.FraudScoreGateway.{ScoreRequest, ScoreResponse}
 import com.paidy.authorizations.actors.FraudStatusGateway.{ScoreUpdateRequest, StatusRequest, StatusResponse}
+import com.paidy.domain.Address
 
 import scala.collection.immutable.Queue
+
+object FraudStatusGateway2 {
+  case class StatusResponse(status: Boolean, address: Address)
+  case class StatusRequest(address: Address)
+  case class ScoreUpdateRequest(score: Double, address: Address)
+  def props(addressId: String): Props = Props(new FraudStatusGateway2(addressId))
+}
 
 class FraudStatusGateway2(val addressID: String) extends Actor with ActorLogging{
 
