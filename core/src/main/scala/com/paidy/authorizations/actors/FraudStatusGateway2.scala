@@ -25,7 +25,7 @@ object FraudStatusGateway2 {
 
 class FraudStatusGateway2(val addressID: UUID) extends Actor with ActorLogging {
 
-  implicit val timeout = Timeout(5 seconds)
+  private implicit val timeout = Timeout(5 seconds)
   private implicit val ec = context.dispatcher
 
   // activate the extension

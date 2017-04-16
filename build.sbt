@@ -11,17 +11,20 @@ lazy val core = (project in file("core")).
         "com.typesafe.akka" %% "akka-actor" % "2.4.17",
         "com.typesafe.akka" %% "akka-cluster" % "2.4.17",
         "com.typesafe.akka" %% "akka-cluster-tools" % "2.4.17", //cluster distributed pub-sub
-        "com.typesafe.akka" %% "akka-persistence" % "2.5.0",
+        "com.typesafe.akka" %% "akka-persistence" % "2.4.17",
         "com.typesafe.akka" %% "akka-http" % "10.0.5",
         "com.typesafe.akka" %% "akka-http-spray-json" % "10.0.5",
         //for akka persistense
         "org.iq80.leveldb"          % "leveldb"        % "0.7",
         "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8",
         //for tests
-        "org.scalatest" %% "scalatest" % "3.0.1" % Test
+        "commons-io" % "commons-io" % "2.5"  % "test",
+        "org.scalatest" %% "scalatest" % "3.0.1" % Test,
+        "com.typesafe.akka" %% "akka-testkit" % "2.4.17" % Test
       )
     )),
     name := "core"
+    //fork in Test := true
   )
 
 
