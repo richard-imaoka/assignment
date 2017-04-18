@@ -3,6 +3,7 @@ package com.paidy.persistence
 import java.io.File
 
 import akka.actor.ActorSystem
+import akka.persistence.Persistence
 import akka.testkit.TestKit
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.commons.io.FileUtils
@@ -36,8 +37,9 @@ abstract class MySpec(config: Config, systemNane: String = "MySpec" )
 
 object MySpec {
   def config(plugin: String, test: String, serialization: String = "on", extraConfig: Option[String] = None) =
-    extraConfig.map(ConfigFactory.parseString(_)).getOrElse(ConfigFactory.empty()).withFallback(
-      ConfigFactory.parseString(
+    extraConfig.map(ConfigFactory.parseString(_))
+      .getOrElse(ConfigFactory.empty())
+      .withFallback(ConfigFactory.parseString(
         s"""
       akka.actor.serialize-creators = ${serialization}
       akka.actor.serialize-messages = ${serialization}
@@ -49,5 +51,7 @@ object MySpec {
       akka.persistence.snapshot-store.local.dir = "target/snapshots-${test}/"
       akka.test.single-expect-default = 10s
     """))
+    .withFallback(ConfigFactory.load("test-reference"))
+
 }
 

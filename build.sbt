@@ -1,5 +1,5 @@
 lazy val root = (project in file("."))
-  .aggregate(core, fraudScoreServer, fraudStatusServer, fraudStatusHttpServer)
+  .aggregate(core, fraudIdResolver, fraudScoreServer, fraudStatusServer, fraudStatusHttpServer)
 
 lazy val core = (project in file("core")).
   settings(
@@ -21,12 +21,22 @@ lazy val core = (project in file("core")).
         "commons-io" % "commons-io" % "2.5"  % "test",
         "org.scalatest" %% "scalatest" % "3.0.1" % Test,
         "com.typesafe.akka" %% "akka-testkit" % "2.4.17" % Test
-      )
+      ),
+      fork in run := true,
+      fork in Test := true
     )),
     name := "core"
-    //fork in Test := true
+
   )
 
+lazy val fraudIdResolver = (project in file("fraud-id-resolver"))
+  .settings(
+    name := "fraud-id-resolver",
+    dockerBaseImage in Docker := "flangelier/scala"
+  )
+  .dependsOn(core)
+  .enablePlugins(JavaAppPackaging)
+  .enablePlugins(DockerPlugin)
 
 lazy val fraudScoreServer = (project in file("fraud-score-server"))
   .settings(
