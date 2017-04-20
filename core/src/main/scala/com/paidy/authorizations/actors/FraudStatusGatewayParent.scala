@@ -31,7 +31,7 @@ class FraudStatusGatewayParent extends Actor with ActorLogging {
   override def receive : Receive = {
     case CreateChild(addressID) =>
       log.info(s"received CreateChild(${addressID})")
-      context.actorOf(FraudStatusGateway2.props(addressID))
+      context.actorOf(FraudStatusGateway2.props(addressID), addressID.toString)
       sender() ! ChildCreated(addressID)
     case x: Any =>
       log.info("what the hell??")

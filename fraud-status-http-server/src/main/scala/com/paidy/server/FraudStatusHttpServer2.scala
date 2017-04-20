@@ -11,7 +11,8 @@ import akka.http.scaladsl.server.Directives
 import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import com.paidy.authorizations.actors.FraudStatusGateway.{StatusRequest, StatusResponse}
+import com.paidy.authorizations.actors.FraudStatusGateway2.{StatusRequest, StatusResponse}
+import com.paidy.authorizations.actors.FraudStatusGateway2
 import com.paidy.domain.{Address, Address2}
 import com.paidy.identifiers.actors.IdResolver
 import com.paidy.identifiers.actors.IdResolver.{IdFound, IdRequest}
@@ -53,7 +54,7 @@ object FraudStatusHttpServer2 extends Directives with JsonSupport{
     implicit val executionContext = system.dispatcher
 
     val mediator = DistributedPubSub(system).mediator
-    implicit val timeout = Timeout(5 seconds)
+    implicit val timeout = Timeout(15 seconds)
 
     val route =
       path("check") {
@@ -65,7 +66,8 @@ object FraudStatusHttpServer2 extends Directives with JsonSupport{
             val fut2: Future[Any] = fut
               .mapTo[IdFound]
               .flatMap { idFound =>
-                mediator ? Send(path = s"/user/${idFound.addressID}", msg = StatusRequest(address), localAffinity = false)
+                println(s"sending to ${FraudStatusGateway2.path(idFound.addressID)}")
+                mediator ? Send(path = FraudStatusGateway2.path(idFound.addressID), msg = StatusRequest(address), localAffinity = false)
               }
 
             onComplete(fut2){

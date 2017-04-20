@@ -65,6 +65,8 @@ abstract class IdResolverBase extends PersistentActor with ActorLogging {
         case None =>
           log.info(s"addressID=${address.addressID} is new, not found in the existing list.")
           existingAddressIDs = address.addressID :: existingAddressIDs
+
+          val idRequestSender = sender()
           //If addressID is not found, you need to create an actor for the addressID
           val askFut = mediator ? Send(path = FraudStatusGatewayParent.path, msg = CreateChild(address.addressID), localAffinity = false)
           askFut.onComplete{
@@ -79,8 +81,8 @@ abstract class IdResolverBase extends PersistentActor with ActorLogging {
                   //existingAddressIDs = address.addressID :: existingAddressIDs
                 }
               }
-              sender() ! IdFound(address.addressID)
-              log.info(s"IdFound(${address.addressID}) was sent back")
+              idRequestSender ! IdFound(address.addressID)
+              log.info(s"IdFound(${address.addressID}) was sent back to ${idRequestSender}")
 
             case Failure(e) =>
               log.error(e, s"actor creation for ${address.addressID} failed")

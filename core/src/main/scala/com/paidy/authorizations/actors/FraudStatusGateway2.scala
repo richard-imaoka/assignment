@@ -20,6 +20,8 @@ object FraudStatusGateway2 {
   case class ScoreUpdateRequest(score: Double, address: Address)
 
   def props(addressId: UUID): Props = Props(new FraudStatusGateway2(addressId))
+
+  def path(addressID: UUID): String = FraudStatusGatewayParent.path + "/" + addressID.toString
 }
 
 class FraudStatusGateway2(val addressID: UUID) extends Actor with ActorLogging {
