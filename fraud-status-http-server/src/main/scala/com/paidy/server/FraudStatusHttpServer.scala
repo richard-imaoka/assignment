@@ -62,7 +62,7 @@ object FraudStatusHttpServer extends Directives with JsonSupport{
     implicit val executionContext = system.dispatcher
 
     val mediator = DistributedPubSub(system).mediator
-    implicit val timeout = Timeout(15 seconds)
+    implicit val timeout = Timeout(5 seconds)
 
     val route =
       path("check") {
