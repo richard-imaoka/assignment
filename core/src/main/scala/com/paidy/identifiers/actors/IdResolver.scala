@@ -8,7 +8,8 @@ import akka.cluster.pubsub.DistributedPubSubMediator.{Put, Send}
 import akka.pattern._
 import akka.persistence.PersistentActor
 import akka.util.Timeout
-import com.paidy.authorizations.actors.FraudStatusGateway2
+import com.paidy.authorizations.actors.FraudStatusGatewayParent
+import com.paidy.authorizations.actors.FraudStatusGatewayParent.CreateChild
 import com.paidy.domain.Address2
 import com.paidy.identifiers.actors.IdResolver.{IdFound, IdRequest}
 
@@ -45,7 +46,7 @@ abstract class IdResolverBase extends PersistentActor with ActorLogging {
     mediator ! Put(self)
     super.preStart()
   }
-  
+
   override val receiveRecover = {
     case addressIDString: String =>
       existingAddressIDs = UUID.fromString(addressIDString) :: existingAddressIDs
@@ -65,7 +66,7 @@ abstract class IdResolverBase extends PersistentActor with ActorLogging {
           log.info(s"addressID=${address.addressID} is new, not found in the existing list.")
           existingAddressIDs = address.addressID :: existingAddressIDs
           //If addressID is not found, you need to create an actor for the addressID
-          val askFut = mediator ? Send(path = "/user/fraud-status-parent", msg = FraudStatusGateway2.CreateActorRequest(address.addressID), localAffinity = false)
+          val askFut = mediator ? Send(path = FraudStatusGatewayParent.path, msg = CreateChild(address.addressID), localAffinity = false)
           askFut.onComplete{
             case Success(_) =>
               log.info(s"actor creation for ${address.addressID} was successful")
@@ -85,8 +86,6 @@ abstract class IdResolverBase extends PersistentActor with ActorLogging {
               log.error(e, s"actor creation for ${address.addressID} failed")
           }
       }
-    case x: Any =>
-      println(s"received ${x}")
   }
 }
 

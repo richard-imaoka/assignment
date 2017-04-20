@@ -1,7 +1,7 @@
 package com.paidy.server
 
-import akka.actor.{ActorRef, ActorSystem}
-import com.paidy.authorizations.actors.FraudStatusGateway
+import akka.actor.ActorSystem
+import com.paidy.authorizations.actors.{FraudStatusGateway2, FraudStatusGatewayParent}
 import com.typesafe.config.ConfigFactory
 
 /**
@@ -32,7 +32,7 @@ object FraudStatusServer2 {
     implicit val system = ActorSystem(clusterName,config)
     implicit val executionContext = system.dispatcher
 
-    val parent: ActorRef = system.actorOf(FraudStatusGateway.props, "fraud-status-parent")
+    system.actorOf(FraudStatusGatewayParent.props, FraudStatusGatewayParent.name)
 
     println(s"${this.getClass.getSimpleName} server started.")
   }

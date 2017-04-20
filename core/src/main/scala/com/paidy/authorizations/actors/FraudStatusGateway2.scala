@@ -18,8 +18,7 @@ object FraudStatusGateway2 {
   case class StatusResponse(status: Boolean, address: Address)
   case class StatusRequest(address: Address)
   case class ScoreUpdateRequest(score: Double, address: Address)
-  case class CreateActorRequest(addressId: UUID)
-  
+
   def props(addressId: UUID): Props = Props(new FraudStatusGateway2(addressId))
 }
 
