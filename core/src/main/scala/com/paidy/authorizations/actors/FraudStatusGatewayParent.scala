@@ -22,9 +22,9 @@ class FraudStatusGatewayParent extends Actor with ActorLogging {
   val mediator = DistributedPubSub(context.system).mediator
 
   override def preStart(): Unit = {
-    log.info(s"${getClass} is starting at ${self.path}" )
     // register to the path
     mediator ! Put(self)
+    log.info(s"${getClass} is starting at ${self.path}" )
   }
 
   override def receive : Receive = {
@@ -32,7 +32,5 @@ class FraudStatusGatewayParent extends Actor with ActorLogging {
       log.info(s"received CreateChild(${addressID})")
       context.actorOf(FraudStatusGateway.props(addressID), addressID.toString)
       sender() ! ChildCreated(addressID)
-    case x: Any =>
-      log.info("what the hell??")
   }
 }

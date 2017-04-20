@@ -23,9 +23,9 @@ class FraudScoreGateway extends Actor with ActorLogging {
   implicit val ec = context.system.dispatcher
 
   override def preStart(): Unit = {
-    log.info(s"${getClass} is starting at ${self.path}" )
     // register to the path
     mediator ! Put(self)
+    log.info(s"${getClass} is starting at ${self.path}" )
   }
 
   override def receive: Receive = {

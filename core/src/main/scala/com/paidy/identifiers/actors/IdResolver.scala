@@ -41,9 +41,9 @@ abstract class IdResolverBase extends PersistentActor with ActorLogging {
   protected val mediator : ActorRef
 
   override def preStart(): Unit = {
-    log.info(s"${getClass} is starting at ${self.path}" )
     // register to the path
     mediator ! Put(self)
+    log.info(s"${getClass} is starting at ${self.path}" )
   }
 
   override val receiveRecover = {
@@ -80,8 +80,9 @@ abstract class IdResolverBase extends PersistentActor with ActorLogging {
                   //existingAddressIDs = address.addressID :: existingAddressIDs
                 }
               }
+
+              log.info(s"IdFound(${address.addressID}) is sent back to ${idRequestSender}")
               idRequestSender ! IdFound(address.addressID)
-              log.info(s"IdFound(${address.addressID}) was sent back to ${idRequestSender}")
 
             case Failure(e) =>
               log.error(e, s"actor creation for ${address.addressID} failed")

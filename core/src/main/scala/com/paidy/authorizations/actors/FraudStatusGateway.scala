@@ -40,9 +40,9 @@ class FraudStatusGateway(val addressID: UUID) extends Actor with ActorLogging {
   private val maxSizeOfHistoricalScores: Int = 10 // historicalScores are kept up to this size
 
   override def preStart(): Unit = {
-    log.info(s"${getClass} is starting at ${self.path}")
     mediator ! Put(self)
     mediator ! Subscribe("cacher", self)
+    log.info(s"${getClass} is starting at ${self.path}")
   }
 
   def takeUpToNlastScores(score: Double, historicalScores: Queue[Double], N: Int): Queue[Double] = {
