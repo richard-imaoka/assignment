@@ -1,5 +1,7 @@
 package com.paidy.server
 
+import java.util.UUID
+
 import akka.actor.ActorSystem
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Send
@@ -9,13 +11,18 @@ import akka.http.scaladsl.server.Directives
 import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
+import com.paidy.authorizations.actors.FraudStatusGateway
 import com.paidy.authorizations.actors.FraudStatusGateway.{StatusRequest, StatusResponse}
-import com.paidy.domain.Address
+import com.paidy.domain.{Address, Address2}
+import com.paidy.identifiers.actors.IdResolver
+import com.paidy.identifiers.actors.IdResolver.{IdFound, IdRequest}
 import com.typesafe.config.ConfigFactory
 import spray.json._
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
+
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val addressFormat = jsonFormat5(Address) //to marshall/unmarshall (i.e. JSON <-> Address) for 5-parameter case class
@@ -55,15 +62,23 @@ object FraudStatusHttpServer extends Directives with JsonSupport{
     implicit val executionContext = system.dispatcher
 
     val mediator = DistributedPubSub(system).mediator
-    implicit val timeout = Timeout(5 seconds)
+    implicit val timeout = Timeout(15 seconds)
 
     val route =
       path("check") {
         post {
           entity(as[Address]) { address =>
             println("received: ", address)
-            val fut = mediator ? Send(path = "/user/cache", msg = StatusRequest(address), localAffinity = false)
-            onComplete(fut){
+            val address2 = Address2(UUID.randomUUID(), address.line1, address.line2, address.city, address.state, address.zip)
+            val fut = mediator ? Send(path = IdResolver.path, msg = IdRequest(address2), localAffinity = false)
+            val fut2: Future[Any] = fut
+              .mapTo[IdFound]
+              .flatMap { idFound =>
+                println(s"sending to ${FraudStatusGateway.path(idFound.addressID)}")
+                mediator ? Send(path = FraudStatusGateway.path(idFound.addressID), msg = StatusRequest(address), localAffinity = false)
+              }
+
+            onComplete(fut2){
               case Success(r) => {
                 val response = r.asInstanceOf[StatusResponse]
                 val returnJSON = ReturnJSON(response.status, response.address)
