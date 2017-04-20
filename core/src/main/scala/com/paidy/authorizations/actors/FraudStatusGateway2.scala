@@ -43,7 +43,6 @@ class FraudStatusGateway2(val addressID: UUID) extends Actor with ActorLogging {
     log.info(s"${getClass} is starting at ${self.path}")
     mediator ! Put(self)
     mediator ! Subscribe("cacher", self)
-    super.preStart()
   }
 
   def takeUpToNlastScores(score: Double, historicalScores: Queue[Double], N: Int): Queue[Double] = {

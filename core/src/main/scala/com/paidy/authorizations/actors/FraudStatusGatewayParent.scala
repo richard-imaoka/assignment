@@ -25,7 +25,6 @@ class FraudStatusGatewayParent extends Actor with ActorLogging {
     log.info(s"${getClass} is starting at ${self.path}" )
     // register to the path
     mediator ! Put(self)
-    super.preStart()
   }
 
   override def receive : Receive = {
