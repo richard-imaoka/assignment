@@ -2,12 +2,12 @@ package com.paidy.authorizations.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.cluster.pubsub.DistributedPubSub
-import akka.cluster.pubsub.DistributedPubSubMediator.{Publish, Send}
+import akka.cluster.pubsub.DistributedPubSubMediator.Publish
 import akka.pattern._
 import akka.util.Timeout
 import com.paidy.authorizations.actors.AddressFraudProbabilityScorer.ScoreAddress
-import com.paidy.authorizations.actors.FraudStatusGateway.ScoreUpdateRequest
 import com.paidy.authorizations.actors.FraudScoreGateway.{ScoreRequest, ScoreRequestNoResponse, ScoreResponse}
+import com.paidy.authorizations.actors.FraudStatusGateway.ScoreUpdateRequest
 import com.paidy.domain.Address
 
 import scala.concurrent.duration._

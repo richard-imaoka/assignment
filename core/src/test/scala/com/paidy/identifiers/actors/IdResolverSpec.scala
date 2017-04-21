@@ -3,16 +3,16 @@ package com.paidy.identifiers.actors
 import java.util.UUID
 
 import akka.actor._
-import com.paidy.domain.Address2
-import com.paidy.identifiers.actors.IdResolver.{IdFound, IdRequest}
-import com.paidy.identifiers.actors.IdResolverTester.GetAddressIDs
+import com.paidy.domain.Address
+import com.paidy.identifiers.actors.AddressIdManager.{IdResponse, IdRequest}
+import com.paidy.identifiers.actors.AddressIdManagerTester.GetAddressIDs
 import com.paidy.persistence.MySpec
 
 
-object IdResolverTester {
+object AddressIdManagerTester {
   case object GetAddressIDs
 
-  def props = Props( new IdResolverTester )
+  def props = Props( new AddressIdManagerTester )
 }
 
 class EchoActor extends Actor {
@@ -22,7 +22,7 @@ class EchoActor extends Actor {
   }
 }
 
-class IdResolverTester extends IdResolverBase {
+class AddressIdManagerTester extends AddressIdManager {
   override def receiveCommand = super.receiveCommand orElse {
     case GetAddressIDs =>
       sender() ! existingAddressIDs
@@ -31,23 +31,23 @@ class IdResolverTester extends IdResolverBase {
   override val mediator: ActorRef = context.actorOf(Props(new EchoActor))
 }
 
-class IdResolverSpec extends MySpec(MySpec.config("leveldb", "IdResolveSpec")) {
+class AddressIdManagerSpec extends MySpec(MySpec.config("leveldb", "IdResolveSpec")) {
 
-  "An IdResolverSpec" must {
+  "An AddressIdManagerSpec" must {
     "recover existingAddressIds from persistence" in {
 
-      val actor = system.actorOf(IdResolverTester.props)
+      val actor = system.actorOf(AddressIdManagerTester.props)
 
       val addressID1 = UUID.randomUUID()
-      actor ! IdRequest(Address2(addressID1, "Minami-Nagasaki", "4-25-9", "Toshima-ku", "Tokyo", ""))
+      actor ! IdRequest(Address(addressID1, "Minami-Nagasaki", "4-25-9", "Toshima-ku", "Tokyo", ""))
 
       val addressID2 = UUID.randomUUID()
-      actor ! IdRequest(Address2(addressID2, "Minami-Nagasaki", "4-26-3", "Toshima-ku", "Tokyo", ""))
+      actor ! IdRequest(Address(addressID2, "Minami-Nagasaki", "4-26-3", "Toshima-ku", "Tokyo", ""))
 
       //actor ! GetAddressIDs
 
-      expectMsg(IdFound(addressID1))
-      expectMsg(IdFound(addressID2))
+      expectMsg(IdResponse(addressID1))
+      expectMsg(IdResponse(addressID2))
     }
   }
 }
