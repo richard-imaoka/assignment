@@ -6,7 +6,7 @@ metadata:
     name: fraud-score-server
     app: akka-sample-cluster
 spec:
-  replicas: 2
+  replicas: 1
   template:
     metadata:
       name: fraud-score-server
@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: fraud-score-server
-        image: asia.gcr.io/assignment-164106/fraud-score-server:b91ab8a2a692
+        image: asia.gcr.io/assignment-164106/fraud-score-server:24200d4d95e8
         ports:
         - name: cluster-port
           containerPort: 2551

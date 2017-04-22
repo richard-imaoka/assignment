@@ -11,6 +11,7 @@ import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
   */
 object NetworkConfig {
 
+
   def hostLocalAddress: String = NetworkInterface.getNetworkInterfaces.
     find(_.getName equals "eth0").
     flatMap(interface =>

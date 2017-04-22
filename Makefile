@@ -1,17 +1,27 @@
-.PHONY: docker-stage
+#!/bin/bash
 
-docker-stage:
-	sbt docker:stage
+.PHONY: docker-publishLocal
 
-docker-publishLocal: docker-stage
+GIT_COMMIT_HASH=$(shell git log --pretty=format:'%h' -n 1)
+
+default:
+	@echo ${GIT_COMMIT_HASH}
+
+docker-publishLocal:
 	sbt docker:publishLocal
 
+#	FRAUD_SCORE_IMAGE_ID = docker images fraud-score-server -q
+#	docker tag $FRAUD_SCORE_IMAGE_ID
 
-# docker tag e34106838dbe asia.gcr.io/assignment-164106/fraud-status-http-server
-# docker tag e66be95bbc2d asia.gcr.io/assignment-164106/fraud-status-server
-# docker tag aead8fff19b9 asia.gcr.io/assignment-164106/fraud-score-server
+docker-tags:
+	@docker tag $(shell docker images fraud-status-http-server -q) asia.gcr.io/assignment-164106/fraud-status-http-server:${GIT_COMMIT_HASH}
+	@docker tag $(shell docker images fraud-status-server -q)      asia.gcr.io/assignment-164106/fraud-status-server:${GIT_COMMIT_HASH}
+	@docker tag $(shell docker images fraud-score-server -q)       asia.gcr.io/assignment-164106/fraud-score-server:${GIT_COMMIT_HASH}
+	@docker tag $(shell docker images fraud-id-resolver -q)        asia.gcr.io/assignment-164106/fraud-id-resolver:${GIT_COMMIT_HASH}
+	@docker images | grep ${GIT_COMMIT_HASH}
 
 gcloud-push:
-	@gcloud docker -- push asia.gcr.io/assignment-164106/fraud-status-http-server
-	@gcloud docker -- push asia.gcr.io/assignment-164106/fraud-status-server
-	@gcloud docker -- push asia.gcr.io/assignment-164106/fraud-score-server
+	@gcloud docker -- push asia.gcr.io/assignment-164106/fraud-status-http-server:${GIT_COMMIT_HASH}
+	@gcloud docker -- push asia.gcr.io/assignment-164106/fraud-status-server:${GIT_COMMIT_HASH}
+	@gcloud docker -- push asia.gcr.io/assignment-164106/fraud-score-server:${GIT_COMMIT_HASH}
+	@gcloud docker -- push asia.gcr.io/assignment-164106/fraud-id-resolver:${GIT_COMMIT_HASH}

@@ -10,10 +10,12 @@ spec:
   template:
     metadata:
       name: fraud-status-http-server
+      labels:
+        name: http-server
     spec:
       containers:
       - name: fraud-status-http-server
-        image: asia.gcr.io/assignment-164106/fraud-status-http-server
+        image: asia.gcr.io/assignment-164106/fraud-status-http-server:5790f2645d86
         ports:
         - name: cluster-port
           containerPort: 2551
