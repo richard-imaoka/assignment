@@ -14,7 +14,9 @@ object FraudStatusServer {
     println(s"portFromEnv=${portFromEnv}")
     val port = if (args.size > 0) args(0) else if (portFromEnv != null) portFromEnv else "0"
 
-    val internalIp = NetworkConfig.hostLocalAddress
+    val ipFromEnv = System.getenv("THIS_IP")
+    println(s"ipFromEnv=${ipFromEnv}")
+    val internalIp = if(ipFromEnv != null) ipFromEnv else NetworkConfig.hostLocalAddress
 
     val appConfig = ConfigFactory.load("scoring-server")
     val clusterName = appConfig.getString("com.paidy.cluster-system")

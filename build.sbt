@@ -32,7 +32,7 @@ lazy val core = (project in file("core")).
 lazy val fraudIdResolver = (project in file("fraud-id-resolver"))
   .settings(
     name := "fraud-id-resolver",
-    dockerBaseImage in Docker := "flangelier/scala"
+    dockerBaseImage := "flangelier/scala"
   )
   .dependsOn(core)
   .enablePlugins(JavaAppPackaging)
@@ -41,7 +41,7 @@ lazy val fraudIdResolver = (project in file("fraud-id-resolver"))
 lazy val fraudScoreServer = (project in file("fraud-score-server"))
   .settings(
     name := "fraud-score-server",
-    dockerBaseImage in Docker := "flangelier/scala"
+    dockerBaseImage := "flangelier/scala"
   )
   .dependsOn(core)
   .enablePlugins(JavaAppPackaging)
