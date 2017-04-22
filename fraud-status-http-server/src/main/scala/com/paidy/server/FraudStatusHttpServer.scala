@@ -14,6 +14,8 @@ import akka.util.Timeout
 import com.paidy.authorizations.actors.FraudStatusGateway
 import com.paidy.authorizations.actors.FraudStatusGateway.{StatusRequest, StatusResponse}
 import com.paidy.domain.Address
+import com.paidy.identifiers.actors.AddressIdManager
+import com.paidy.identifiers.actors.AddressIdManager.{IdRequest, IdResponse}
 import com.typesafe.config.ConfigFactory
 import spray.json._
 
@@ -23,14 +25,16 @@ import scala.util.{Failure, Success}
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit object UuidJsonFormat extends RootJsonFormat[UUID] {
     def write(id: UUID) = JsString(id.toString)
-    def read(value: JsValue): UUID =
-      try {
-        UUID.fromString(value.toString)
-      }
-      catch{
-        case e: IllegalArgumentException =>
-         deserializationError(s"${value} is not a valid string for UUID", e)
-      }
+    def read(value: JsValue): UUID = value match {
+      case jstr: JsString =>
+        try {
+          UUID.fromString(jstr.value)
+        }
+        catch{
+          case e: IllegalArgumentException =>
+            deserializationError(s"${jstr.value} is not a valid string for UUID", e)
+        }
+    }
   }
 
   implicit val addressFormat = jsonFormat6(Address) //to marshall/unmarshall (i.e. JSON <-> Address) for 5-parameter case class
@@ -89,6 +93,16 @@ object FraudStatusHttpServer extends Directives with JsonSupport{
                 failWith(ex) // this doesn't expose the error details to the HTTP client but just gives HTTP 500
               }
             }
+          }
+        }
+      } ~ path("address-id") {
+        post {
+          println("new address ID request received")
+          val fut = mediator ? Send(path = AddressIdManager.path, msg = IdRequest, localAffinity = false)
+          onComplete(fut) {
+            case Success(response) =>
+              println(response)
+              complete(response.asInstanceOf[IdResponse].addressID)
           }
         }
       }
