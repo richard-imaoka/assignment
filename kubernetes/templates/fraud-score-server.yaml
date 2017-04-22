@@ -1,21 +1,21 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: fraud-status-server
+  name: fraud-score-server
   labels:
-    name: fraud-status-server
+    name: fraud-score-server
     app: akka-sample-cluster
 spec:
-  replicas: 2
+  replicas: 1
   template:
     metadata:
-      name: fraud-status-server
+      name: fraud-score-server
       labels:
-        name: status-server
+        name: seed-node
     spec:
       containers:
-      - name: fraud-status-server
-        image: asia.gcr.io/assignment-164106/fraud-status-server:606dede
+      - name: fraud-score-server
+        image: asia.gcr.io/assignment-164106/fraud-score-server:GIT_COMMIT_HASH
         ports:
         - name: cluster-port
           containerPort: 2551

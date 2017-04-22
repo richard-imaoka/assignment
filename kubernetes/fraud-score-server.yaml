@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: fraud-score-server
-        image: asia.gcr.io/assignment-164106/fraud-score-server:24200d4d95e8
+        image: asia.gcr.io/assignment-164106/fraud-score-server:606dede
         ports:
         - name: cluster-port
           containerPort: 2551

@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: fraud-id-resolver
-        image: asia.gcr.io/assignment-164106/fraud-id-resolver:a1a33ada82ac
+        image: asia.gcr.io/assignment-164106/fraud-id-resolver:606dede
         ports:
         - name: cluster-port
           containerPort: 2551

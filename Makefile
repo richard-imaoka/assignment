@@ -25,3 +25,9 @@ gcloud-push:
 	@gcloud docker -- push asia.gcr.io/assignment-164106/fraud-status-server:${GIT_COMMIT_HASH}
 	@gcloud docker -- push asia.gcr.io/assignment-164106/fraud-score-server:${GIT_COMMIT_HASH}
 	@gcloud docker -- push asia.gcr.io/assignment-164106/fraud-id-resolver:${GIT_COMMIT_HASH}
+
+yaml-update:
+	@cat kubernetes/templates/fraud-status-http-server.yaml | sed "s/GIT_COMMIT_HASH/${GIT_COMMIT_HASH}/g" > kubernetes/fraud-status-http-server.yaml
+	@cat kubernetes/templates/fraud-status-server.yaml      | sed "s/GIT_COMMIT_HASH/${GIT_COMMIT_HASH}/g" > kubernetes/fraud-status-server.yaml
+	@cat kubernetes/templates/fraud-score-server.yaml       | sed "s/GIT_COMMIT_HASH/${GIT_COMMIT_HASH}/g" > kubernetes/fraud-score-server.yaml
+	@cat kubernetes/templates/fraud-id-resolve-server.yaml  | sed "s/GIT_COMMIT_HASH/${GIT_COMMIT_HASH}/g" > kubernetes/fraud-id-resolve-server.yaml
