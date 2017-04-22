@@ -15,10 +15,12 @@ spec:
     spec:
       containers:
       - name: fraud-status-http-server
-        image: asia.gcr.io/assignment-164106/fraud-status-http-server:7934eb6
+        image: asia.gcr.io/assignment-164106/fraud-status-http-server:2a5b717
         ports:
         - name: cluster-port
           containerPort: 2551
+        - name: http-port
+          containerPort: 8080
         env:
           - name: SEED_DISCOVERY_SERVICE
             value: discovery-svc.default.svc.cluster.local
