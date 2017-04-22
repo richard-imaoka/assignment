@@ -43,6 +43,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
 case class ReturnJSON(status: Boolean, address: Address)
 
+
 //use logger instead of println
 //read ip from config
 //read port from config

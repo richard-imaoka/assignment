@@ -2,21 +2,23 @@ package com.paidy.authorizations.actors
 
 import java.util.UUID
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.{Put, Send, Subscribe}
 import akka.util.Timeout
-import com.paidy.authorizations.actors.FraudScoreGateway.{ScoreRequest, ScoreResponse}
-import com.paidy.authorizations.actors.FraudStatusGateway.{StatusRequest, StatusResponse}
+import com.paidy.authorizations.actors.FraudScoreGateway.ScoreRequest
+import com.paidy.authorizations.actors.FraudStatusGateway.{ScoreResponse, StatusRequest, StatusResponse}
 import com.paidy.domain.Address
 
 import scala.collection.immutable.Queue
 import scala.concurrent.duration._
 
 object FraudStatusGateway {
+  abstract sealed class MsgType
+  case class StatusRequest(address: Address) extends MsgType
+  case class ScoreResponse(score: Double, address: Address, originalRequester: ActorRef) extends MsgType
+
   case class StatusResponse(status: Boolean, address: Address)
-  case class StatusRequest(address: Address)
-  case class ScoreUpdateRequest(score: Double, address: Address)
 
   def props(addressId: UUID): Props = Props(new FraudStatusGateway(addressId))
 

@@ -5,7 +5,8 @@ import akka.cluster.pubsub.DistributedPubSub
 import akka.pattern._
 import akka.util.Timeout
 import com.paidy.authorizations.actors.AddressFraudProbabilityScorer.ScoreAddress
-import com.paidy.authorizations.actors.FraudScoreGateway.{ScoreRequest, ScoreResponse}
+import com.paidy.authorizations.actors.FraudScoreGateway.ScoreRequest
+import com.paidy.authorizations.actors.FraudStatusGateway.ScoreResponse
 import com.paidy.domain.Address
 
 import scala.concurrent.duration._
@@ -39,8 +40,9 @@ class FraudScoreGateway extends Actor with ActorLogging {
 }
 
 object FraudScoreGateway {
-  case class ScoreRequest(address: Address, originalRequester: ActorRef)
-  case class ScoreResponse(score: Double, address: Address, originalRequester: ActorRef)
+  abstract sealed class MsgType
+  case class ScoreRequest(address: Address, originalRequester: ActorRef) extends MsgType
+
 
   val name: String = "score-gateway"
   val path: String = "/user/" + name
