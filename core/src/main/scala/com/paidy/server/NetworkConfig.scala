@@ -22,7 +22,7 @@ object NetworkConfig {
     map(InetAddress.getAllByName(_).map(_.getHostAddress).toSeq).
     getOrElse(Seq.empty)
 
-  def seedNodesPorts: Seq[String] = Option(System.getenv("SEED_PORT")).
+  def seedNodesPorts: Seq[String] = Option(System.getenv("CLUSTER_PORT")).
     map(port => Seq.fill(seedNodesIps.size)(port)).getOrElse(Seq.empty)
 
   def seedsConfig(config: Config, clusterName: String): Config =
