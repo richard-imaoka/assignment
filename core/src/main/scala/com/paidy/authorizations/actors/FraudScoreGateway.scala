@@ -16,7 +16,6 @@ class FraudScoreGateway extends Actor with ActorLogging {
   import akka.cluster.pubsub.DistributedPubSubMediator.Put
   val mediator = DistributedPubSub(context.system).mediator
 
-  log.info(s"${getClass} creating scorer" )
   val scorer = context.actorOf(AddressFraudProbabilityScorer.props)
 
   implicit val timeout = Timeout(5 seconds)
@@ -35,7 +34,7 @@ class FraudScoreGateway extends Actor with ActorLogging {
         .mapTo[Double]
         .map(score => {
           log.info(s"returning score = ${score}")
-          mediator ? Publish("cacher", ScoreUpdateRequest(score, address))
+          mediator ? Publish(FraudStatusGateway.topic, ScoreUpdateRequest(score, address))
           ScoreResponse(score, address)
         })
         .pipeTo(sender())
@@ -46,7 +45,7 @@ class FraudScoreGateway extends Actor with ActorLogging {
         .mapTo[Double]
         .map(score => {
           log.info(s"returning score = ${score}")
-          mediator ? Publish("cacher", ScoreUpdateRequest(score, address))
+          mediator ? Publish(FraudStatusGateway.topic, ScoreUpdateRequest(score, address))
         })
 
   }
@@ -56,6 +55,9 @@ object FraudScoreGateway {
   case class ScoreRequest(address: Address)
   case class ScoreRequestNoResponse(address: Address)
   case class ScoreResponse(score: Double, address: Address)
+
+  val name: String = "score-gateway"
+  val path: String = "/user/" + name
 
   def props: Props = Props(new FraudScoreGateway)
 }

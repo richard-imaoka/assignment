@@ -26,7 +26,7 @@ object FraudScoreServer {
     implicit val system = ActorSystem(clusterName,config)
     implicit val executionContext = system.dispatcher
 
-    val scorer: ActorRef = system.actorOf(FraudScoreGateway.props, "scorer")
+    val scorer: ActorRef = system.actorOf(FraudScoreGateway.props, FraudScoreGateway.name)
 
     println("Scoring server started.")
   }

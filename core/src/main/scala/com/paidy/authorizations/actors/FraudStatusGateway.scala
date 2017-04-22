@@ -21,6 +21,7 @@ object FraudStatusGateway {
 
   def props(addressId: UUID): Props = Props(new FraudStatusGateway(addressId))
 
+  val topic: String = "status-gateway-topic"
   def path(addressID: UUID): String = FraudStatusGatewayParent.path + "/" + addressID.toString
 }
 
@@ -41,7 +42,7 @@ class FraudStatusGateway(val addressID: UUID) extends Actor with ActorLogging {
 
   override def preStart(): Unit = {
     mediator ! Put(self)
-    mediator ! Subscribe("cacher", self)
+    mediator ! Subscribe(FraudStatusGateway.topic, self)
     log.info(s"${getClass} is starting at ${self.path}")
   }
 
@@ -79,7 +80,7 @@ class FraudStatusGateway(val addressID: UUID) extends Actor with ActorLogging {
       else {
         log.info("Asking backend for the current score")
         // If no sufficient history, ask for a new score
-        val askFut = mediator ? Send(path = "/user/scorer", msg = ScoreRequest(address), localAffinity = false)
+        val askFut = mediator ? Send(path = FraudScoreGateway.path, msg = ScoreRequest(address), localAffinity = false)
         askFut
           .mapTo[ScoreResponse]
           .map(res => {
