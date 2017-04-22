@@ -72,7 +72,12 @@ class FraudStatusGateway(val addressID: UUID) extends Actor with ActorLogging {
     case StatusRequest(address) =>
       log.info(s"${this.getClass} received status request for address =${address}")
 
-      if (historicalScores.size < maxSizeOfHistoricalScores) {
+      if(historicalScores.size == maxSizeOfHistoricalScores && !judgeByHistoricalScores(historicalScores)) {
+        log.info("Return early with status = false, as historical scores had average >= 0.7")
+        sender() ! StatusResponse(false, address)
+      }
+      else {
+        log.info("Asking backend for the current score")
         // If no sufficient history, ask for a new score
         val askFut = mediator ? Send(path = "/user/scorer", msg = ScoreRequest(address), localAffinity = false)
         askFut
@@ -85,20 +90,7 @@ class FraudStatusGateway(val addressID: UUID) extends Actor with ActorLogging {
           })
           .pipeTo(sender())
       }
-      else {
-        // If there are sufficient number of historical scores, 1. return first, then 2. tell a new score request to update historical scores
-        if (historicalScores != maxSizeOfHistoricalScores)
-          log.warning(s"Fraud status is calculated from historical scores with size = ${historicalScores.size}, although expected size = ${maxSizeOfHistoricalScores}")
 
-        val status = judgeByHistoricalScores(historicalScores)
-        log.info(s"Fraud check status = ${status} from historical scores: ${historicalScores}")
-
-        // 1. return first
-        sender() ! StatusResponse(status, address)
-
-        // 2. tell a new score request to update historical scores
-        mediator ! Send(path = "/user/scorer", msg = ScoreRequestNoResponse(address), localAffinity = false)
-      }
 
     case ScoreUpdateRequest(score, address) =>
       log.info(s"${this.getClass} received score update: $address")
