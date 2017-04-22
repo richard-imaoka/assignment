@@ -5,10 +5,9 @@ import java.util.UUID
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.{Put, Send, Subscribe}
-import akka.pattern._
 import akka.util.Timeout
-import com.paidy.authorizations.actors.FraudScoreGateway.{ScoreRequest, ScoreRequestNoResponse, ScoreResponse}
-import com.paidy.authorizations.actors.FraudStatusGateway.{ScoreUpdateRequest, StatusRequest, StatusResponse}
+import com.paidy.authorizations.actors.FraudScoreGateway.{ScoreRequest, ScoreResponse}
+import com.paidy.authorizations.actors.FraudStatusGateway.{StatusRequest, StatusResponse}
 import com.paidy.domain.Address
 
 import scala.collection.immutable.Queue
@@ -79,26 +78,18 @@ class FraudStatusGateway(val addressID: UUID) extends Actor with ActorLogging {
       }
       else {
         log.info("Asking backend for the current score")
-        // If no sufficient history, ask for a new score
-        val askFut = mediator ? Send(path = FraudScoreGateway.path, msg = ScoreRequest(address), localAffinity = false)
-        askFut
-          .mapTo[ScoreResponse]
-          .map(res => {
-            log.info(s"${this.getClass} received score response: $address")
-            val status = judgeByScore(res.score)
-            log.info(s"Fraud check status = ${status}, with current score = ${res.score}")
-            StatusResponse(status, address)
-          })
-          .pipeTo(sender())
+        mediator ! Send(path = FraudScoreGateway.path, msg = ScoreRequest(address, sender()), localAffinity = false)
       }
 
+    case ScoreResponse(score, address, originalRequester) =>
+      log.info(s"Received ScoreResponse with score=${score}, address=$address")
 
-    case ScoreUpdateRequest(score, address) =>
-      log.info(s"${this.getClass} received score update: $address")
-      log.info(s"${this.getClass} previous historical scores:\n$historicalScores")
-
+      log.info(s"Previous historical scores: $historicalScores")
       historicalScores = takeUpToNlastScores(score, historicalScores, maxSizeOfHistoricalScores)
-      log.info(s"${this.getClass} updated historical scores:\n$historicalScores")
+      log.info(s"Updated historical scores: $historicalScores")
 
+      val status = judgeByScore(score)
+      log.info(s"Sending back fraud check status = ${status}, with current score = ${score}")
+      originalRequester ! StatusResponse(status, address)
   }
 }
