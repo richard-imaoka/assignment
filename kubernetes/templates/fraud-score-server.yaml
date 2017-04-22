@@ -26,5 +26,5 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: status.podIP
-          - name: SEED_PORT
+          - name: CLUSTER_PORT
             value: "2551"
