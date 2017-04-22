@@ -11,13 +11,6 @@ import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
   */
 object NetworkConfig {
 
-
-  def hostLocalAddress: String = NetworkInterface.getNetworkInterfaces.
-    find(_.getName equals "eth0").
-    flatMap(interface =>
-      interface.getInetAddresses.find(_.isSiteLocalAddress).map(_.getHostAddress)).
-    getOrElse("127.0.0.1")
-
   def seedNodesIps: Seq[String] = Option(System.getenv("SEED_DISCOVERY_SERVICE")).
     map(InetAddress.getAllByName(_).map(_.getHostAddress).toSeq).
     getOrElse(Seq.empty)
