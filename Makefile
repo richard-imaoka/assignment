@@ -31,3 +31,6 @@ yaml-update:
 	@cat kubernetes/templates/fraud-status-server.yaml      | sed "s/GIT_COMMIT_HASH/${GIT_COMMIT_HASH}/g" > kubernetes/fraud-status-server.yaml
 	@cat kubernetes/templates/fraud-score-server.yaml       | sed "s/GIT_COMMIT_HASH/${GIT_COMMIT_HASH}/g" > kubernetes/fraud-score-server.yaml
 	@cat kubernetes/templates/fraud-id-resolve-server.yaml  | sed "s/GIT_COMMIT_HASH/${GIT_COMMIT_HASH}/g" > kubernetes/fraud-id-resolve-server.yaml
+
+gcloud-create:
+	@gcloud container clusters create --cluster-version=1.6.1 assignment-cluser-1 --machine-type=f1-micro

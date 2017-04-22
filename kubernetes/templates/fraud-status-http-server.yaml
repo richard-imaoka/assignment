@@ -6,7 +6,7 @@ metadata:
     name: fraud-status-http-server
     app: akka-sample-cluster
 spec:
-  replicas: 2
+  replicas: 1
   template:
     metadata:
       name: fraud-status-http-server

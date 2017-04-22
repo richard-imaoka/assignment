@@ -6,7 +6,7 @@ metadata:
     name: fraud-status-http-server
     app: akka-sample-cluster
 spec:
-  replicas: 2
+  replicas: 1
   template:
     metadata:
       name: fraud-status-http-server
@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: fraud-status-http-server
-        image: asia.gcr.io/assignment-164106/fraud-status-http-server:606dede
+        image: asia.gcr.io/assignment-164106/fraud-status-http-server:7934eb6
         ports:
         - name: cluster-port
           containerPort: 2551
