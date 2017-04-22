@@ -19,7 +19,7 @@ object FraudScoreServer {
     val internalIp = if(ipFromEnv != null) ipFromEnv else NetworkConfig.hostLocalAddress
 
     val appConfig = ConfigFactory.load("scoring-server")
-    val clusterName = appConfig.getString("com.paidy.cluster-system")
+    val clusterName = appConfig.getString("clustering-system")
 
     val config = ConfigFactory.parseString("akka.cluster.roles = [backend]").
       withFallback(ConfigFactory.parseString(s"akka.remote.netty.tcp.port=$port")).
