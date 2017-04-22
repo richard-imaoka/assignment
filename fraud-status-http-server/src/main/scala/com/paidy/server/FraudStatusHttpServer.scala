@@ -109,8 +109,8 @@ object FraudStatusHttpServer extends Directives with JsonSupport{
         }
       }
 
-    val bindingFuture = Http().bindAndHandle(route, "localhost", 8080)
+    val bindingFuture = Http().bindAndHandle(route, internalIp, 8080)
 
-    println(s"Server online at http://localhost:8080/")
+    println(s"Server online at http://${internalIp}:8080/")
   }
 }
