@@ -10,7 +10,7 @@ import com.typesafe.config.ConfigFactory
 object FraudStatusServer {
 
   def main(args: Array[String]): Unit = {
-    val portFromEnv = System.getenv("THIS_PORT")
+    val portFromEnv = System.getenv("SEED_PORT")
     println(s"portFromEnv=${portFromEnv}")
     val port = if (args.size > 0) args(0) else if (portFromEnv != null) portFromEnv else "0"
 
