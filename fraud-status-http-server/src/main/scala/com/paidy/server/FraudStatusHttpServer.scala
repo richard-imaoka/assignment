@@ -34,6 +34,8 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
           case e: IllegalArgumentException =>
             deserializationError(s"${jstr.value} is not a valid string for UUID", e)
         }
+      case _ =>
+        deserializationError(s"${value} is not a valid string for UUID", e)
     }
   }
 
@@ -99,6 +101,8 @@ object FraudStatusHttpServer extends Directives with JsonSupport{
             case Success(response) =>
               println(response)
               complete(response.asInstanceOf[IdResponse].addressID)
+            case Failure(e) =>
+              failWith(e)
           }
         }
       }
