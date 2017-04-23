@@ -15,7 +15,7 @@ import com.paidy.authorizations.actors.FraudStatusGateway
 import com.paidy.authorizations.actors.FraudStatusGateway.{GetHistoricalScores, StatusRequest, StatusResponse}
 import com.paidy.domain.Address
 import com.paidy.identifiers.actors.AddressIdManager
-import com.paidy.identifiers.actors.AddressIdManager.{IdRequest, IdResponse}
+import com.paidy.identifiers.actors.AddressIdManager.{GetAllAddressIDs, IdRequest, IdResponse}
 import com.typesafe.config.ConfigFactory
 import spray.json._
 
@@ -95,7 +95,16 @@ object FraudStatusHttpServer extends Directives with JsonSupport{
           }
         }
       } ~ path("address-id") {
-        post {
+        get {
+          println("get all address-id request received")
+          val fut = mediator ? Send(path = AddressIdManager.path, msg = GetAllAddressIDs, localAffinity = false)
+          onComplete(fut) {
+            case Success(response) =>
+              complete(response.asInstanceOf[List[UUID]].toJson)
+            case Failure(e) =>
+              failWith(e)
+          }
+        } ~ post {
           println("new address ID request received")
           val fut = mediator ? Send(path = AddressIdManager.path, msg = IdRequest, localAffinity = false)
           onComplete(fut) {

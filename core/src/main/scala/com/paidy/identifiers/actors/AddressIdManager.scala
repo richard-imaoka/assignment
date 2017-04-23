@@ -10,12 +10,16 @@ import akka.persistence.{PersistentActor, SnapshotOffer}
 import akka.util.Timeout
 import com.paidy.authorizations.actors.FraudStatusGatewayParent
 import com.paidy.authorizations.actors.FraudStatusGatewayParent.CreateChild
-import com.paidy.identifiers.actors.AddressIdManager.{IdRequest, IdResponse}
+import com.paidy.identifiers.actors.AddressIdManager.{GetAllAddressIDs, IdRequest, IdResponse}
 
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 object AddressIdManager {
-  case object IdRequest
+  abstract sealed class MsgType
+  case object IdRequest extends MsgType
+  case object GetAllAddressIDs extends MsgType
+
   case class IdResponse(addressID: UUID)
 
   def props: Props = Props(new AddressIdManager)
@@ -64,9 +68,17 @@ class AddressIdManager extends PersistentActor with ActorLogging {
         }
       }
 
-      mediator ? Send(path = FraudStatusGatewayParent.path, msg = CreateChild(addressID), localAffinity = false)
+      val fut = mediator ? Send(path = FraudStatusGatewayParent.path, msg = CreateChild(addressID), localAffinity = false)
+      fut.onComplete {
+        case Success(_) =>
+          log.info(s"Returning addressID=${addressID} to sender=${sender()}")
+          sender() ! IdResponse(addressID)
+        case Failure(e) =>
+          log.error(e, s"Failed to create child for ${addressID}")
+      }
 
-      log.info(s"Returning addressID=${addressID} to sender=${sender()}")
-      sender() ! IdResponse(addressID)
+    case GetAllAddressIDs =>
+      log.info(s"GetAllAddressIDs request received, so returning existing address IDS = ${existingAddressIDs}")
+      sender() ! existingAddressIDs
   }
 }
