@@ -12,13 +12,14 @@ import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import com.paidy.authorizations.actors.FraudStatusGateway
-import com.paidy.authorizations.actors.FraudStatusGateway.{StatusRequest, StatusResponse}
+import com.paidy.authorizations.actors.FraudStatusGateway.{GetHistoricalScores, StatusRequest, StatusResponse}
 import com.paidy.domain.Address
 import com.paidy.identifiers.actors.AddressIdManager
 import com.paidy.identifiers.actors.AddressIdManager.{IdRequest, IdResponse}
 import com.typesafe.config.ConfigFactory
 import spray.json._
 
+import scala.collection.immutable.Queue
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
@@ -101,6 +102,17 @@ object FraudStatusHttpServer extends Directives with JsonSupport{
             case Success(response) =>
               println(response)
               complete(response.asInstanceOf[IdResponse].addressID)
+            case Failure(e) =>
+              failWith(e)
+          }
+        }
+      } ~ path("address-scores" / JavaUUID) { uuid =>
+        get {
+          println(s"address-scores request received for ${uuid}")
+          val fut = mediator ? Send(path = FraudStatusGateway.path(uuid), msg = GetHistoricalScores, localAffinity = false)
+          onComplete(fut) {
+            case Success(response) =>
+              complete(response.asInstanceOf[Queue[Double]].toList.toJson)
             case Failure(e) =>
               failWith(e)
           }

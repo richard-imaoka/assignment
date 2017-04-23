@@ -8,7 +8,7 @@ import akka.cluster.pubsub.DistributedPubSubMediator.{Put, Send, Subscribe}
 import akka.persistence.PersistentActor
 import akka.util.Timeout
 import com.paidy.authorizations.actors.FraudScoreGateway.ScoreRequest
-import com.paidy.authorizations.actors.FraudStatusGateway.{ScoreResponse, StatusRequest, StatusResponse}
+import com.paidy.authorizations.actors.FraudStatusGateway.{GetHistoricalScores, ScoreResponse, StatusRequest, StatusResponse}
 import com.paidy.domain.Address
 
 import scala.collection.immutable.Queue
@@ -18,6 +18,7 @@ object FraudStatusGateway {
   abstract sealed class MsgType
   case class StatusRequest(address: Address) extends MsgType
   case class ScoreResponse(score: Double, address: Address, originalRequester: ActorRef) extends MsgType
+  case object GetHistoricalScores extends MsgType
 
   case class StatusResponse(status: Boolean, address: Address)
 
@@ -105,5 +106,10 @@ class FraudStatusGateway(val addressID: UUID) extends PersistentActor with Actor
       val status = judgeByScore(score)
       log.info(s"Sending back fraud check status = ${status}, with current score = ${score}")
       originalRequester ! StatusResponse(status, address)
+
+    case GetHistoricalScores =>
+      log.info(s"GetHistorialScores received, so sending back historical scores = ${historicalScores}")
+      sender() ! historicalScores
+
   }
 }
