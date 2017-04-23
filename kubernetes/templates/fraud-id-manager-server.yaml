@@ -1,21 +1,21 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: fraud-id-resolver
+  name: fraud-id-manager
   labels:
-    name: fraud-id-resolver
+    name: fraud-id-manager
     app: akka-sample-cluster
 spec:
   replicas: 1
   template:
     metadata:
-      name: fraud-id-resolver
+      name: fraud-id-manager
       labels:
-        name: id-resolver
+        name: id-manager
     spec:
       containers:
-      - name: fraud-id-resolver
-        image: asia.gcr.io/assignment-164106/fraud-id-resolver:GIT_COMMIT_HASH
+      - name: fraud-id-manager
+        image: asia.gcr.io/assignment-164106/fraud-id-manager:GIT_COMMIT_HASH
         ports:
         - name: cluster-port
           containerPort: 2551

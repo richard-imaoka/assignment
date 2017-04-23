@@ -1,5 +1,5 @@
 lazy val root = (project in file("."))
-  .aggregate(core, fraudIdResolver, fraudScoreServer, fraudStatusServer, fraudStatusHttpServer)
+  .aggregate(core, fraudIdManager, fraudScoreServer, fraudStatusServer, fraudStatusHttpServer)
 
 lazy val core = (project in file("core")).
   settings(
@@ -29,9 +29,9 @@ lazy val core = (project in file("core")).
 
   )
 
-lazy val fraudIdResolver = (project in file("fraud-id-resolver"))
+lazy val fraudIdManager = (project in file("fraud-id-manager"))
   .settings(
-    name := "fraud-id-resolver",
+    name := "fraud-id-manager",
     dockerBaseImage := "flangelier/scala"
   )
   .dependsOn(core)

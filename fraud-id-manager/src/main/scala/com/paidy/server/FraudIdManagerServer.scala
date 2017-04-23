@@ -1,13 +1,12 @@
 package com.paidy.server
 
 import akka.actor.ActorSystem
-import akka.cluster.pubsub.DistributedPubSub
 import com.paidy.identifiers.actors.AddressIdManager
 import com.typesafe.config.ConfigFactory
 /**
   * Created by yunishiyama on 2017/04/07.
   */
-object FraudIDResolveServer {
+object FraudIdManagerServer {
 
   def main(args: Array[String]): Unit = {
 

@@ -31,7 +31,7 @@ class AddressIdManagerTester extends AddressIdManager {
   override val mediator: ActorRef = context.actorOf(Props(new EchoActor))
 }
 
-class AddressIdManagerSpec extends MySpec(MySpec.config("leveldb", "IdResolveSpec")) {
+class AddressIdManagerSpec extends MySpec(MySpec.config("leveldb", "IdManagerSpec")) {
 
   "An AddressIdManagerSpec" must {
     "recover existingAddressIds from persistence" in {
