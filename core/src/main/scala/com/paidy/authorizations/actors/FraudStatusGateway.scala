@@ -29,6 +29,8 @@ object FraudStatusGateway {
 
 class FraudStatusGateway(val addressID: UUID) extends PersistentActor with ActorLogging {
 
+  override val persistenceId = "fraud-status-" + addressID.toString
+
   private implicit val timeout = Timeout(5 seconds)
   private implicit val ec = context.dispatcher
 

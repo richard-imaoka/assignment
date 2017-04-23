@@ -6,7 +6,7 @@ import akka.actor.{ActorLogging, Props}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.{Put, Send}
 import akka.pattern._
-import akka.persistence.PersistentActor
+import akka.persistence.{PersistentActor, SnapshotOffer}
 import akka.util.Timeout
 import com.paidy.authorizations.actors.FraudStatusGatewayParent
 import com.paidy.authorizations.actors.FraudStatusGatewayParent.CreateChild
@@ -45,10 +45,10 @@ class AddressIdManager extends PersistentActor with ActorLogging {
   }
 
   override val receiveRecover = {
-    case addressIDString: String =>
-      existingAddressIDs = UUID.fromString(addressIDString) :: existingAddressIDs
-//    case SnapshotOffer(_, snapshot: List[]) =>
-//      existingAddressIDs = snapshot.map(UUID.fromString(_))
+    case addressID: UUID =>
+      existingAddressIDs = addressID :: existingAddressIDs
+    case SnapshotOffer(_, snapshot: List[UUID]) =>
+      existingAddressIDs = snapshot
   }
 
   override def receiveCommand = {

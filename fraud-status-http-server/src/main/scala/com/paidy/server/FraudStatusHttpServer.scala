@@ -35,7 +35,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
             deserializationError(s"${jstr.value} is not a valid string for UUID", e)
         }
       case _ =>
-        deserializationError(s"${value} is not a valid string for UUID", e)
+        deserializationError(s"${value} is not a valid string for UUID")
     }
   }
 
