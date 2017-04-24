@@ -1,7 +1,5 @@
 ## Overview
 
-![overview](images/overview.png)
-
 The application is running in Kubernetes at http://
 
 The entire application consists of four separate servers, 
@@ -23,7 +21,7 @@ The entire application consists of four separate servers,
 
 `curl -X POST http://***/address-id`
 
-<img src="images/architecture1.png" width="480">
+<img src="images/architecture1.png"  width="600">
 
 3. Create address JSON with the address ID obtained in 2.
 
@@ -33,7 +31,7 @@ The entire application consists of four separate servers,
 
 `./address-json.sh e72db56b-0c4e-415a-9cbb-0cc14d540392 | ./curl-json.sh `
 
-<img src="images/architecture1.png" width="480">
+<img src="images/architecture1.png" width="600">
 
 5. You get a response JSON with fraud check status, if not timed out 
 
@@ -61,7 +59,7 @@ All these servers can communicate to each other using [Akka Cluster](http://doc.
 
 ### FraudStatusHttpServer
 
-<img src="images/FraudStatusHttpServer.png">
+<img src="images/FraudStatusHttpServer.png" width="200">
 
 Here are URLs used in the HTTP server:
 
@@ -75,13 +73,11 @@ Here are URLs used in the HTTP server:
 
 `FraudStatusHttpServer` is written in [Akka HTTP](http://doc.akka.io/docs/akka-http/current/scala.html)
 
-When `FraudStatusHttpServer` receives a request, 
-
 ### FraudIdManagerServer
 
 This server keeps track of all existing address IDs (UUID)
 
-<img src="images/FraudIdManager.png">
+<img src="images/FraudIdManager.png" width="480">
 
 * Upon receiving a new `IdRequest`, 
   * it generates a new address ID
@@ -105,7 +101,7 @@ This server keeps track of all existing address IDs (UUID)
   
 ### FraudScoreServer
 
-<img src="images/FraudScoreServer.png">
+<img src="images/FraudScoreServer.png" width="480">
 
 
 ### Caveats
