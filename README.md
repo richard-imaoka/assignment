@@ -13,23 +13,27 @@ The entire application consists of four separate servers,
 
 ### Run a fraud check for a new address 
 
-1. To use utility shell scripts, please git clone this repository
+#### 1. To use utility shell scripts, please git clone this repository
 
 `git clone git@github.com:richard-imaoka/assignment.git`
 
-2. Run the following to get an address ID (UUID)
+#### 2. Run the following to get an address ID (UUID)
 
 `curl -X POST http://35.187.209.185/address-id`
+
+You will get an address ID like below
 
 `3297bcfc-da93-4a74-9a84-bc7a0cef0c2b`
 
 <img src="images/architecture1.png" width="600">
 
-3. Create address JSON with the address ID obtained in 2.
+#### 3. Create address JSON with the address ID obtained in 2.
 
 You need the [`jo`](https://github.com/jpmens/jo) command installed (brew install jo) to run the following:
 
 `./address-json.sh 3297bcfc-da93-4a74-9a84-bc7a0cef0c2b`
+
+resulting JSON.
 
 ```
 {
@@ -42,23 +46,23 @@ You need the [`jo`](https://github.com/jpmens/jo) command installed (brew instal
 }
 ```
 
-4. Send the address JSON from 3. to the fraud check http server
+#### 4. Send the address JSON from 3. to the fraud check http server
 
 `./address-json.sh 3297bcfc-da93-4a74-9a84-bc7a0cef0c2b | curl -H 'Content-Type:application/json' http://35.187.209.185/check -X POST -d @-`
 
 <img src="images/architecture1.png" width="600">
 
-5. You get a response JSON with fraud check status, if not timed out 
+#### 5. You get a response JSON with fraud check status, if not timed out 
 
 `{"status":true,"address":{"city":"Tokyo","zip":"106-0032","state":"Tokyo","line1":"Minato-Ku","line2":"Roppongi","addressID":"3297bcfc-da93-4a74-9a84-bc7a0cef0c2b"}}`
 
 ### More actions
 
-6. Access to the following from your browser, to see all existing address IDs 
+#### 6. Access to the following from your browser, to see all existing address IDs 
 
 http://35.187.209.185/address-id
 
-7. Pick any of address ID from 6. and substitute it in the following URL, to check historical fraud check scores for the address ID
+#### 7. Pick any of address ID from 6. and substitute it in the following URL, to check historical fraud check scores for the address ID
 
 (e.g.) http://35.187.209.185/address-scores/3297bcfc-da93-4a74-9a84-bc7a0cef0c2b
 
