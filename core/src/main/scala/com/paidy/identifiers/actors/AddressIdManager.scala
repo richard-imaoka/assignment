@@ -48,14 +48,14 @@ class AddressIdManager extends PersistentActor with ActorLogging {
     log.info(s"${getClass} is starting at ${self.path}")
   }
 
-  override val receiveRecover = {
+  override val receiveRecover : Receive = {
     case addressID: UUID =>
       existingAddressIDs = addressID :: existingAddressIDs
     case SnapshotOffer(_, snapshot: List[UUID]) =>
       existingAddressIDs = snapshot
   }
 
-  override def receiveCommand = {
+  override def receiveCommand : Receive = {
     case IdRequest =>
       log.info(s"IdRequest received.")
       val addressID = UUID.randomUUID()
@@ -68,14 +68,9 @@ class AddressIdManager extends PersistentActor with ActorLogging {
         }
       }
 
-      val fut = mediator ? Send(path = FraudStatusGatewayParent.path, msg = CreateChild(addressID), localAffinity = false)
-      fut.onComplete {
-        case Success(_) =>
-          log.info(s"Returning addressID=${addressID} to sender=${sender()}")
-          sender() ! IdResponse(addressID)
-        case Failure(e) =>
-          log.error(e, s"Failed to create child for ${addressID}")
-      }
+      mediator ! Send(path = FraudStatusGatewayParent.path, msg = CreateChild(addressID), localAffinity = false)
+      log.info(s"Returning addressID=${addressID} to sender=${sender()}")
+      sender() ! IdResponse(addressID)
 
     case GetAllAddressIDs =>
       log.info(s"GetAllAddressIDs request received, so returning existing address IDS = ${existingAddressIDs}")

@@ -5,7 +5,7 @@ lazy val core = (project in file("core")).
   settings(
     inThisBuild(List(
       organization := "com.paidy",
-      scalaVersion := "2.12.1",
+      scalaVersion := "2.11.8",
       version      := "0.1.0-SNAPSHOT",
       libraryDependencies ++= Seq(
         "com.typesafe.akka" %% "akka-actor" % "2.4.17",
@@ -17,6 +17,9 @@ lazy val core = (project in file("core")).
         //for akka persistense
         "org.iq80.leveldb"          % "leveldb"        % "0.7",
         "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8",
+        "com.okumin" %% "akka-persistence-sql-async" % "0.4.0",
+        "com.github.mauricio" %% "mysql-async" % "0.2.20",
+        "org.slf4j" % "slf4j-log4j12" % "1.7.2",
         //for tests
         "commons-io" % "commons-io" % "2.5"  % "test",
         "org.scalatest" %% "scalatest" % "3.0.1" % Test,
