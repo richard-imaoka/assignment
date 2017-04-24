@@ -5,7 +5,7 @@ import java.util.UUID
 import akka.actor.{ActorLogging, Props}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.{Put, Send}
-import akka.persistence.{PersistentActor, SnapshotOffer}
+import akka.persistence.{PersistentActor, RecoveryCompleted, SnapshotOffer}
 import akka.util.Timeout
 import com.paidy.authorizations.actors.FraudStatusGatewayParent
 import com.paidy.authorizations.actors.FraudStatusGatewayParent.CreateChild
@@ -51,6 +51,13 @@ class AddressIdManager extends PersistentActor with ActorLogging {
       existingAddressIDs = addressID :: existingAddressIDs
     case SnapshotOffer(_, snapshot: List[UUID]) =>
       existingAddressIDs = snapshot
+    case RecoveryCompleted =>
+      existingAddressIDs.foreach{
+        aid => {
+          log.info(s"creating health checker for ${aid}")
+          context.actorOf(AddressIdHealthChecker.props(aid), aid.toString)
+        }
+      }
   }
 
   override def receiveCommand : Receive = {
@@ -69,6 +76,9 @@ class AddressIdManager extends PersistentActor with ActorLogging {
       mediator ! Send(path = FraudStatusGatewayParent.path, msg = CreateChild(addressID), localAffinity = false)
       log.info(s"Returning addressID=${addressID} to sender=${sender()}")
       sender() ! IdResponse(addressID)
+
+      log.info(s"creating health checker for ${addressID}")
+      context.actorOf(AddressIdHealthChecker.props(addressID), addressID.toString)
 
     case GetAllAddressIDs =>
       log.info(s"GetAllAddressIDs request received, so returning existing address IDS = ${existingAddressIDs}")
