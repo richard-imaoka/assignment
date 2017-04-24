@@ -5,7 +5,6 @@ import java.util.UUID
 import akka.actor.{ActorLogging, Props}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.{Put, Send}
-import akka.pattern._
 import akka.persistence.{PersistentActor, SnapshotOffer}
 import akka.util.Timeout
 import com.paidy.authorizations.actors.FraudStatusGatewayParent
@@ -13,7 +12,6 @@ import com.paidy.authorizations.actors.FraudStatusGatewayParent.CreateChild
 import com.paidy.identifiers.actors.AddressIdManager.{GetAllAddressIDs, IdRequest, IdResponse}
 
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
 
 object AddressIdManager {
   abstract sealed class MsgType
