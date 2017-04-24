@@ -100,7 +100,7 @@ For debugging purposes, these paths are also available, although for the service
 
 This server keeps track of all existing address IDs (UUID)
 
-<img src="images/FraudIdManager.png" width="480">
+<img src="images/FraudIdManager.png" width="600">
 
 * Upon receiving a new `IdRequest`, 
   * it generates a new address ID
