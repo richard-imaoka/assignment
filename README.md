@@ -1,6 +1,6 @@
 ## Overview
 
-The application is running in Kubernetes at http://
+The application is running in Kubernetes at [http://35.187.209.185](http://35.187.209.185/address-id)
 
 The entire application consists of four separate servers, 
 
@@ -19,27 +19,48 @@ The entire application consists of four separate servers,
 
 2. Run the following to get an address ID (UUID)
 
-`curl -X POST http://***/address-id`
+`curl -X POST http://35.187.209.185/address-id`
 
-<img src="images/architecture1.png"  width="600">
+`3297bcfc-da93-4a74-9a84-bc7a0cef0c2b`
+
+<img src="images/architecture1.png" width="600">
 
 3. Create address JSON with the address ID obtained in 2.
 
-`./address-json.sh e72db56b-0c4e-415a-9cbb-0cc14d540392`
+You need the [`jo`](https://github.com/jpmens/jo) command installed (brew install jo) to run the following:
+
+`./address-json.sh 3297bcfc-da93-4a74-9a84-bc7a0cef0c2b`
+
+```
+{
+   "addressID": "3297bcfc-da93-4a74-9a84-bc7a0cef0c2b",
+   "city": "Tokyo",
+   "line1": "Minato-Ku",
+   "line2": "Roppongi",
+   "state": "Tokyo",
+   "zip": "106-0032"
+}
+```
 
 4. Send the address JSON from 3. to the fraud check http server
 
-`./address-json.sh e72db56b-0c4e-415a-9cbb-0cc14d540392 | ./curl-json.sh `
+`./address-json.sh 3297bcfc-da93-4a74-9a84-bc7a0cef0c2b | curl -H 'Content-Type:application/json' http://35.187.209.185/check -X POST -d @-`
 
 <img src="images/architecture1.png" width="600">
 
 5. You get a response JSON with fraud check status, if not timed out 
 
+`{"status":true,"address":{"city":"Tokyo","zip":"106-0032","state":"Tokyo","line1":"Minato-Ku","line2":"Roppongi","addressID":"3297bcfc-da93-4a74-9a84-bc7a0cef0c2b"}}`
+
 ### More actions
 
 6. Access to the following from your browser, to see all existing address IDs 
 
+http://35.187.209.185/address-id
+
 7. Pick any of address ID from 6. and substitute it in the following URL, to check historical fraud check scores for the address ID
+
+(e.g.) http://35.187.209.185/address-scores/3297bcfc-da93-4a74-9a84-bc7a0cef0c2b
 
 ## DESIGN
 
@@ -47,8 +68,7 @@ The entire application consists of four separate servers,
 
 * I introduced address ID, which is to distinguish an address from another 
   * This was not in assignment's specification
-  * Even if we don't have any ID for an address, we need to know whether a given address is fraud-checked first time or it is same as previous one
-  * So, introducing an ID would be practical
+  * However, an ID to uniquely identify an address would be a practical assumption
 
 ### Scalability 
 
@@ -63,11 +83,14 @@ All these servers can communicate to each other using [Akka Cluster](http://doc.
 
 Here are URLs used in the HTTP server:
 
+* /check
+  * POST: perform fraud status check for the given address
+
+For debugging purposes, these paths are also available, although for the service design perspective, these don't need to be exposed.
+
 * /address-id
   * POST: create a new address ID
   * GET: get all existing address IDs
-* /check
-  * POST: perform fraud status check for the given address
 * /address-scores:{address-id-UUID-string}
   * GET: get historical fraud check scores for the address ID
 
@@ -98,11 +121,26 @@ This server keeps track of all existing address IDs (UUID)
   * `FraudStatusGateway` asks `FraudScoreServer` for a new fraud score
   * If the score is < 0.78, the fraud-check status is `true`, otherwise `false`
   * When there are 10 historical fraud-check scores in the past (stored in `FraudStatusGateway`) **AND** their average > 0.7 `FraudStatusGateway` returns early with the status = `false`
+* Historical scores are kept in-memory of the actor, and also persisted with Akka Persistence  
   
 ### FraudScoreServer
 
 <img src="images/FraudScoreServer.png" width="480">
 
+`FraudScoreServer` holds `AddressFraudProbabilityScorer` and it sends back a score upon request.
+
+### Health Checking
+
+Sometimes, the entire system (including FraudIdManagerServer) goes down and comes back. 
+Otherwise, one instance of `FraudStatusServer` might go down and all its associated `FraudStatusGateway` actors could be gone.
+
+To make the system work in such situations, the system has health-checking capabilities, 
+and currently it resides in `FraudIdManager` as it keeps track of all address IDs.
+
+`FraudIdManagerServer` holds a health-checker actor for each address ID, and it keeps pinging corresponding `FraudStausGateway` actor periodically for the address ID.
+
+When the health-checker fails to receive a heartbeat from the `FraudStatusGateway` actor, it asks `FraudStatusServer` to 
+create a new `FraudStatusGateway` actor for the address ID.
 
 ### Caveats
 
