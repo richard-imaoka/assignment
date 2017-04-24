@@ -25,7 +25,7 @@ You will get an address ID like below
 
 `3297bcfc-da93-4a74-9a84-bc7a0cef0c2b`
 
-<img src="images/architecture2.png" width="600">
+<img src="images/architecture1.png" width="600">
 
 #### 3. Create address JSON with the address ID obtained in 2.
 
@@ -50,7 +50,7 @@ resulting JSON.
 
 `./address-json.sh 3297bcfc-da93-4a74-9a84-bc7a0cef0c2b | curl -H 'Content-Type:application/json' http://35.187.209.185/check -X POST -d @-`
 
-<img src="images/architecture1.png" width="600">
+<img src="images/architecture2.png" width="600">
 
 #### 5. You get a response JSON with fraud check status, if not timed out 
 
