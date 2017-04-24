@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: fraud-score-server
-        image: asia.gcr.io/assignment-164106/fraud-score-server:7934eb6
+        image: asia.gcr.io/assignment-164106/fraud-score-server:GIT_COMMIT_HASH
         ports:
         - name: cluster-port
           containerPort: 2551
