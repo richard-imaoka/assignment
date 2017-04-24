@@ -41,7 +41,7 @@ class FraudScoreGateway extends Actor with ActorLogging {
 
 object FraudScoreGateway {
   abstract sealed class MsgType
-  case class ScoreRequest(address: Address, originalRequester: ActorRef) extends MsgType
+  case class ScoreRequest(address: Address, originalRequester: Option[ActorRef]) extends MsgType
 
 
   val name: String = "score-gateway"
