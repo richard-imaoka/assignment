@@ -67,6 +67,7 @@ object FraudStatusHttpServer extends Directives with JsonSupport{
 
     println(s"akka.remote.netty.tcp.port=${config.getValue("akka.remote.netty.tcp.port")}")
     println(s"akka.remote.netty.tcp.hostname=${config.getValue("akka.remote.netty.tcp.hostname")}")
+    println(s"akka.cluster.seed-nodes=${config.getValue("akka.cluster.seed-nodes")}")
 
     implicit val system = ActorSystem(clusterName, config)
     implicit val materializer = ActorMaterializer()

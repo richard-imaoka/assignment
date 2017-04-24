@@ -21,6 +21,7 @@ object FraudIdManagerServer {
 
     println(s"akka.remote.netty.tcp.port=${config.getValue("akka.remote.netty.tcp.port")}")
     println(s"akka.remote.netty.tcp.hostname=${config.getValue("akka.remote.netty.tcp.hostname")}")
+    println(s"akka.cluster.seed-nodes=${config.getValue("akka.cluster.seed-nodes")}")
     println(s"Launching ${getClass.getSimpleName} with Actor System name = ${clusterName}")
 
     implicit val system = ActorSystem(clusterName,config)
